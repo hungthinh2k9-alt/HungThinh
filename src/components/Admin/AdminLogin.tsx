@@ -92,10 +92,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
             <LogIn size={18} /> {t.loginBtn}
           </button>
         </form>
-
-        <div className="login-hint mt-4">
-          <span className="hint-pill-subtle">Mật khẩu mặc định: admin / 123456</span>
-        </div>
       </div>
     </div>
   );
