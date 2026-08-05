@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import type { Lesson } from './types/lesson';
+import type { Language } from './utils/i18n';
+import { getStoredLanguage, saveStoredLanguage, translations } from './utils/i18n';
 import { getStoredLessons, saveStoredLessons } from './utils/storage';
 import { fetchLessonsFromSupabase } from './utils/supabase';
 import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
-import { GraduationCap, Settings, BookOpen } from 'lucide-react';
+import { AdminLogin } from './components/Admin/AdminLogin';
+import { GraduationCap, Settings, BookOpen, Globe } from 'lucide-react';
 
 export function App() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [lang, setLang] = useState<Language>(getStoredLanguage());
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+
+  const t = translations[lang];
 
   useEffect(() => {
     async function loadData() {
@@ -29,6 +36,11 @@ export function App() {
     loadData();
   }, []);
 
+  const handleLanguageToggle = (newLang: Language) => {
+    setLang(newLang);
+    saveStoredLanguage(newLang);
+  };
+
   const handleLessonsUpdated = (updatedLessons: Lesson[]) => {
     setLessons(updatedLessons);
     saveStoredLessons(updatedLessons);
@@ -42,6 +54,10 @@ export function App() {
     setSelectedLesson(null);
   };
 
+  const handleLogout = () => {
+    setIsAdminAuthenticated(false);
+  };
+
   return (
     <div className="app-shell">
       {/* Navigation Navbar */}
@@ -51,29 +67,48 @@ export function App() {
             <div className="logo-icon-wrapper">
               <BookOpen size={20} className="logo-icon" />
             </div>
-            <span className="brand-name">LingoQuest</span>
+            <span className="brand-name">{t.brandName}</span>
           </div>
 
-          <nav className="nav-tabs">
-            <button
-              className={`nav-tab ${activeTab === 'student' && !selectedLesson ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab('student');
-                setSelectedLesson(null);
-              }}
-            >
-              <GraduationCap size={18} /> Giao diện Học sinh
-            </button>
-            <button
-              className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab('admin');
-                setSelectedLesson(null);
-              }}
-            >
-              <Settings size={18} /> Quản lý Giáo viên
-            </button>
-          </nav>
+          <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="lang-switcher-pill">
+              <Globe size={15} className="text-muted" />
+              <button
+                className={`lang-btn ${lang === 'vi' ? 'active' : ''}`}
+                onClick={() => handleLanguageToggle('vi')}
+              >
+                🇻🇳 VN
+              </button>
+              <button
+                className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
+                onClick={() => handleLanguageToggle('en')}
+              >
+                🇬🇧 EN
+              </button>
+            </div>
+
+            <nav className="nav-tabs">
+              <button
+                className={`nav-tab ${activeTab === 'student' && !selectedLesson ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('student');
+                  setSelectedLesson(null);
+                }}
+              >
+                <GraduationCap size={18} /> {t.studentView}
+              </button>
+              <button
+                className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('admin');
+                  setSelectedLesson(null);
+                }}
+              >
+                <Settings size={18} /> {t.adminView}
+              </button>
+            </nav>
+          </div>
         </div>
       </header>
 
@@ -82,7 +117,7 @@ export function App() {
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner" />
-            <p>Đang tải dữ liệu bài học...</p>
+            <p>{lang === 'vi' ? 'Đang tải dữ liệu bài học...' : 'Loading lessons...'}</p>
           </div>
         ) : (
           <>
@@ -95,23 +130,33 @@ export function App() {
               ) : (
                 <LessonList
                   lessons={lessons}
+                  lang={lang}
                   onSelectLesson={handleSelectLesson}
                 />
               )
             )}
 
             {activeTab === 'admin' && (
-              <AdminDashboard
-                lessons={lessons}
-                onLessonsUpdated={handleLessonsUpdated}
-              />
+              isAdminAuthenticated ? (
+                <AdminDashboard
+                  lessons={lessons}
+                  lang={lang}
+                  onLessonsUpdated={handleLessonsUpdated}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <AdminLogin
+                  lang={lang}
+                  onLoginSuccess={() => setIsAdminAuthenticated(true)}
+                />
+              )
             )}
           </>
         )}
       </main>
 
       <footer className="app-footer">
-        <p>© LingoQuest • Nền tảng học Tiếng Anh tương tác cho học sinh</p>
+        <p>© {t.brandName} • {lang === 'vi' ? 'Nền tảng học Tiếng Anh tương tác cho học sinh' : 'Interactive English Learning Platform'}</p>
       </footer>
     </div>
   );

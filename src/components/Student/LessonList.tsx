@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import type { Lesson } from '../../types/lesson';
+import type { Language } from '../../utils/i18n';
+import { translations } from '../../utils/i18n';
 import { getStoredProgress } from '../../utils/storage';
 import { BookOpen, Play, Search, Trophy, CheckCircle2, Clock, Layers } from 'lucide-react';
 
 interface LessonListProps {
   lessons: Lesson[];
+  lang: Language;
   onSelectLesson: (lesson: Lesson) => void;
 }
 
 export const LessonList: React.FC<LessonListProps> = ({
   lessons,
+  lang,
   onSelectLesson,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const progressData = getStoredProgress();
+  const t = translations[lang];
 
   const filteredLessons = lessons.filter(
     (l) =>
@@ -27,10 +32,8 @@ export const LessonList: React.FC<LessonListProps> = ({
       {/* Hero Banner */}
       <div className="hero-banner shadow-sm">
         <div className="hero-content">
-          <h1 className="hero-title">Học Tiếng Anh Tương Tác</h1>
-          <p className="hero-subtitle">
-            Luyện tập từ vựng, ngữ pháp và cấu trúc câu thông qua các bài tập tương tác sinh động.
-          </p>
+          <h1 className="hero-title">{t.heroTitle}</h1>
+          <p className="hero-subtitle">{t.heroSubtitle}</p>
         </div>
       </div>
 
@@ -40,14 +43,14 @@ export const LessonList: React.FC<LessonListProps> = ({
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Tìm kiếm chủ đề, từ khóa bài học..."
+            placeholder={t.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
         </div>
         <div className="lessons-count-tag">
-          {filteredLessons.length} {filteredLessons.length === 1 ? 'Chủ đề' : 'Chủ đề'}
+          {filteredLessons.length} {t.topicsAvailable}
         </div>
       </div>
 
@@ -60,10 +63,10 @@ export const LessonList: React.FC<LessonListProps> = ({
           return (
             <div key={lesson.lesson_id} className="lesson-card shadow-sm">
               <div className="lesson-card-header">
-                <span className="category-pill">{lesson.category || 'Bài học Tiếng Anh'}</span>
+                <span className="category-pill">{lesson.category || 'English Topic'}</span>
                 {isCompleted && (
                   <span className="completed-pill">
-                    <CheckCircle2 size={14} /> Đã hoàn thành
+                    <CheckCircle2 size={14} /> {t.completed}
                   </span>
                 )}
               </div>
@@ -73,12 +76,12 @@ export const LessonList: React.FC<LessonListProps> = ({
 
               <div className="lesson-meta-row">
                 <span className="meta-item">
-                  <Layers size={14} /> {lesson.games.length} Bài tập
+                  <Layers size={14} /> {lesson.games.length} {t.gamesCount}
                 </span>
                 {stats && (
                   <>
                     <span className="meta-item">
-                      <Trophy size={14} /> Điểm cao: {stats.highScore}
+                      <Trophy size={14} /> {t.highScore}: {stats.highScore}
                     </span>
                     <span className="meta-item">
                       <Clock size={14} /> {Math.floor(stats.bestTimeSeconds / 60)}m {stats.bestTimeSeconds % 60}s
@@ -89,12 +92,12 @@ export const LessonList: React.FC<LessonListProps> = ({
 
               <div className="game-types-tags mt-3">
                 {lesson.games.map((g, idx) => (
-                  <span key={idx} className={`game-type-tag ${g.type}`}>
-                    {g.type === 'cloze' && 'Điền từ'}
-                    {g.type === 'matching' && 'Nối từ'}
-                    {g.type === 'sentence_builder' && 'Xếp câu'}
-                    {g.type === 'error_spotter' && 'Sửa lỗi'}
-                    {g.type === 'word_scramble' && 'Xếp chữ'}
+                  <span key={idx} className="game-type-tag">
+                    {g.type === 'cloze' && t.clozeLabel}
+                    {g.type === 'matching' && t.matchingLabel}
+                    {g.type === 'sentence_builder' && t.sentenceLabel}
+                    {g.type === 'error_spotter' && t.errorSpotterLabel}
+                    {g.type === 'word_scramble' && t.wordScrambleLabel}
                   </span>
                 ))}
               </div>
@@ -104,7 +107,7 @@ export const LessonList: React.FC<LessonListProps> = ({
                   className="btn-primary full-width"
                   onClick={() => onSelectLesson(lesson)}
                 >
-                  <Play size={16} /> Bắt đầu học
+                  <Play size={16} /> {t.startLearning}
                 </button>
               </div>
             </div>
@@ -114,7 +117,7 @@ export const LessonList: React.FC<LessonListProps> = ({
         {filteredLessons.length === 0 && (
           <div className="empty-state-box">
             <BookOpen size={44} className="empty-icon" />
-            <p>Không tìm thấy bài học nào phù hợp với từ khóa.</p>
+            <p>{t.noTopicsFound}</p>
           </div>
         )}
       </div>
