@@ -3,7 +3,6 @@ import type { Lesson } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { LessonEditor } from './LessonEditor';
-import { JsonImportExportModal } from './JsonImportExportModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import {
   Plus,
@@ -12,7 +11,6 @@ import {
   Copy,
   ArrowUp,
   ArrowDown,
-  FileCode,
   BookOpen,
   KeyRound,
   LogOut,
@@ -33,7 +31,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onLogout,
 }) => {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
-  const [showJsonModal, setShowJsonModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const t = translations[lang];
@@ -100,12 +97,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onLessonsUpdated(updated);
   };
 
-  const handleApplyJsonImport = (importedLessons: Lesson[]) => {
-    saveStoredLessons(importedLessons);
-    onLessonsUpdated(importedLessons);
-    setShowJsonModal(false);
-  };
-
   if (editingLesson) {
     return (
       <LessonEditor
@@ -130,9 +121,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
           <button className="btn-secondary-small danger" onClick={onLogout}>
             <LogOut size={16} /> {t.logOut}
-          </button>
-          <button className="btn-secondary-small" onClick={() => setShowJsonModal(true)}>
-            <FileCode size={16} /> {t.jsonImportExport}
           </button>
           <button className="btn-primary" onClick={handleCreateNewLesson}>
             <Plus size={16} /> {t.createLesson}
@@ -215,14 +203,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
       </div>
-
-      {showJsonModal && (
-        <JsonImportExportModal
-          initialData={lessons}
-          onImport={handleApplyJsonImport}
-          onClose={() => setShowJsonModal(false)}
-        />
-      )}
 
       {showPasswordModal && (
         <ChangePasswordModal

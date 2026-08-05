@@ -125,6 +125,7 @@ export function App() {
               selectedLesson ? (
                 <GameContainer
                   lesson={selectedLesson}
+                  lang={lang}
                   onBackToDashboard={handleBackToDashboard}
                 />
               ) : (
@@ -156,7 +157,7 @@ export function App() {
       </main>
 
       <footer className="app-footer">
-        <p>© {t.brandName} • {lang === 'vi' ? 'Nền tảng học Tiếng Anh tương tác cho học sinh' : 'Interactive English Learning Platform'}</p>
+        <p>© {t.brandName} • {lang === 'vi' ? 'Nền tảng học Tiếng Anh tương tác' : 'Interactive English Learning Platform'}</p>
       </footer>
     </div>
   );

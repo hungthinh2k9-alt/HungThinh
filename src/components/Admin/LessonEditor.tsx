@@ -32,7 +32,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       id: `g-${Date.now()}`,
       type,
       instruction: 'Điền từ thích hợp vào chỗ trống.',
-      items: ['Sample item [target]'],
+      items: ['She is feeling very [happy|vui vẻ] today.'],
     };
     setLesson((prev) => ({
       ...prev,
@@ -57,7 +57,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
   const handleSaveClick = () => {
     if (!lesson.lesson_id.trim()) {
-      setErrorMsg('Mã bài học (Lesson ID) không được để trống.');
+      setErrorMsg('Mã bài học không được để trống.');
       return;
     }
     if (!lesson.title.trim()) {
@@ -65,7 +65,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       return;
     }
     if (lesson.games.length === 0) {
-      setErrorMsg('Bài học phải có ít nhất 1 bài tập trò chơi.');
+      setErrorMsg('Bài học phải có ít nhất 1 bài tập.');
       return;
     }
 
@@ -99,7 +99,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         <h3 className="card-section-title">Thông tin bài học</h3>
         <div className="grid-2-cols mt-3">
           <div className="form-group">
-            <label className="form-label">Mã chủ đề (Slug ID):</label>
+            <label className="form-label">Mã bài học:</label>
             <input
               type="text"
               value={lesson.lesson_id}
@@ -110,7 +110,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Danh mục / Phân loại:</label>
+            <label className="form-label">Phân loại:</label>
             <input
               type="text"
               value={lesson.category || ''}
@@ -147,42 +147,42 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       {/* Games List Builder */}
       <div className="games-builder-section mt-6">
         <div className="section-header">
-          <h3>Danh sách bài tập trò chơi ({lesson.games.length})</h3>
+          <h3>Danh sách bài tập ({lesson.games.length})</h3>
           <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('cloze')}
             >
-              <Plus size={14} /> Điền từ (Cloze)
+              <Plus size={14} /> Điền từ
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('matching')}
             >
-              <Plus size={14} /> Nối từ (Matching)
+              <Plus size={14} /> Nối từ
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('sentence_builder')}
             >
-              <Plus size={14} /> Xếp câu (Sentence)
+              <Plus size={14} /> Xếp câu
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('error_spotter')}
             >
-              <Plus size={14} /> Sửa lỗi sai
+              <Plus size={14} /> Sửa lỗi
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('word_scramble')}
             >
-              <Plus size={14} /> Xếp chữ cái
+              <Plus size={14} /> Xếp chữ
             </button>
           </div>
         </div>

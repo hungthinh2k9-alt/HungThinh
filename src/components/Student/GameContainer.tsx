@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Lesson, Game } from '../../types/lesson';
+import type { Language } from '../../utils/i18n';
+import { translations } from '../../utils/i18n';
 import { ClozeEngine } from './ClozeEngine';
 import { MatchingEngine } from './MatchingEngine';
 import { SentenceBuilderEngine } from './SentenceBuilderEngine';
@@ -11,11 +13,13 @@ import { saveStudentLessonProgress } from '../../utils/storage';
 
 interface GameContainerProps {
   lesson: Lesson;
+  lang: Language;
   onBackToDashboard: () => void;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
   lesson,
+  lang,
   onBackToDashboard,
 }) => {
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
@@ -28,7 +32,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [startTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Timer counter
+  const t = translations[lang];
+
   useEffect(() => {
     if (isFinished) return;
     const interval = setInterval(() => {
@@ -48,7 +53,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       if (newStreak > maxStreak) {
         setMaxStreak(newStreak);
       }
-      // Calculate score with streak bonus
       const bonus = Math.min(newStreak * 10, 50);
       setScore((prev) => prev + 100 + bonus);
     } else {
@@ -60,7 +64,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     if (currentGameIndex < lesson.games.length - 1) {
       setCurrentGameIndex((prev) => prev + 1);
     } else {
-      // Finished all games in the lesson!
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
       saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime);
       setIsFinished(true);
@@ -71,6 +74,17 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const getGameTypeLabel = (type: string) => {
+    switch (type) {
+      case 'cloze': return t.clozeLabel;
+      case 'matching': return t.matchingLabel;
+      case 'sentence_builder': return t.sentenceLabel;
+      case 'error_spotter': return t.errorSpotterLabel;
+      case 'word_scramble': return t.wordScrambleLabel;
+      default: return type;
+    }
   };
 
   if (isFinished) {
@@ -102,14 +116,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     <div className="game-container-layout">
       {/* Header bar */}
       <div className="game-header-bar">
-        <button className="btn-icon" onClick={onBackToDashboard} title="Back to Topics">
+        <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
           <ArrowLeft size={20} />
         </button>
 
         <div className="header-info">
           <h2 className="lesson-header-title">{lesson.title}</h2>
           <span className="game-type-badge">
-            Game {currentGameIndex + 1} of {lesson.games.length}: {currentGame.type.toUpperCase().replace('_', ' ')}
+            {lang === 'vi' ? `Bài ${currentGameIndex + 1} / ${lesson.games.length}` : `Exercise ${currentGameIndex + 1} of ${lesson.games.length}`}: {getGameTypeLabel(currentGame.type)}
           </span>
         </div>
 
@@ -117,13 +131,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           {streak > 0 && (
             <div className="stat-item streak-pill animate-bounce-subtle">
               <Flame size={18} className="icon-flame" />
-              <span>{streak} Streak!</span>
+              <span>{streak} {t.streak}</span>
             </div>
           )}
 
           <div className="stat-item score-pill">
             <Trophy size={18} className="icon-trophy" />
-            <span>{score} pts</span>
+            <span>{score} {t.pts}</span>
           </div>
 
           <div className="stat-item time-pill">
@@ -141,7 +155,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         />
       </div>
 
-      {/* Dynamic Game Engine rendering */}
+      {/* Game View */}
       <div className="engine-viewport">
         {currentGame.type === 'cloze' && (
           <ClozeEngine

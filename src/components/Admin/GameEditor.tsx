@@ -19,27 +19,27 @@ interface GameEditorProps {
 
 const GAME_SYNTAX_GUIDES: Record<GameType, { label: string; placeholder: string; example: string }> = {
   cloze: {
-    label: 'Cú pháp bài tập Điền từ',
+    label: 'Hướng dẫn bài tập Điền từ',
     placeholder: 'Từ che ẩn: [target|gợi ý] hoặc che một phần: h[av]e',
     example: 'She is feeling very [happy|vui vẻ] today.\nThey h[av]e breakfast at 7 AM.',
   },
   matching: {
-    label: 'Cú pháp bài tập Nối từ',
+    label: 'Hướng dẫn bài tập Nối từ',
     placeholder: 'Từ tiếng Anh => Nghĩa tiếng Việt',
     example: 'Always => Luôn luôn\nUsually => Thường xuyên\nNever => Không bao giờ',
   },
   sentence_builder: {
-    label: 'Cú pháp bài tập Xếp câu',
+    label: 'Hướng dẫn bài tập Xếp câu',
     placeholder: 'Cụm từ 1 | Cụm từ 2 | Cụm từ 3',
     example: 'She | usually gets up | early in the morning.\nThey | do not like | fast food.',
   },
   error_spotter: {
-    label: 'Cú pháp bài tập Sửa lỗi sai',
+    label: 'Hướng dẫn bài tập Sửa lỗi sai',
     placeholder: 'Đoạn trước [từ_sai -> từ_đúng] Đoạn sau',
     example: 'She [go -> goes] to school every day.\nThey [is -> are] watching a match.',
   },
   word_scramble: {
-    label: 'Cú pháp bài tập Xếp chữ cái',
+    label: 'Hướng dẫn bài tập Xếp chữ cái',
     placeholder: 'Từ_cần_xếp hoặc Từ_cần_xếp|Gợi ý',
     example: 'beautiful|Rất đẹp\nchallenge|Thử thách',
   },
@@ -117,11 +117,11 @@ export const GameEditor: React.FC<GameEditorProps> = ({
             onChange={(e) => handleTypeChange(e.target.value as GameType)}
             className="game-type-select"
           >
-            <option value="cloze">Điền từ (Cloze)</option>
-            <option value="matching">Nối từ (Matching)</option>
-            <option value="sentence_builder">Xếp câu (Sentence Builder)</option>
-            <option value="error_spotter">Sửa lỗi sai (Error Spotter)</option>
-            <option value="word_scramble">Xếp chữ cái (Word Scramble)</option>
+            <option value="cloze">Điền từ</option>
+            <option value="matching">Nối từ</option>
+            <option value="sentence_builder">Xếp câu</option>
+            <option value="error_spotter">Sửa lỗi sai</option>
+            <option value="word_scramble">Xếp chữ cái</option>
           </select>
         </div>
 
@@ -168,7 +168,7 @@ export const GameEditor: React.FC<GameEditorProps> = ({
       </div>
 
       <div className="form-group mt-3">
-        <label className="form-label">Yêu cầu / Hướng dẫn bài tập:</label>
+        <label className="form-label">Yêu cầu bài tập:</label>
         <input
           type="text"
           value={game.instruction}
