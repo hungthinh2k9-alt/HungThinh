@@ -61,7 +61,7 @@ export const LessonList: React.FC<LessonListProps> = ({
           const isCompleted = !!stats;
 
           return (
-            <div key={lesson.lesson_id} className="lesson-card shadow-sm">
+            <article key={lesson.lesson_id} className="lesson-card shadow-sm">
               <div className="lesson-card-header">
                 <span className="category-pill">{lesson.category || 'English Topic'}</span>
                 {isCompleted && (
@@ -72,7 +72,7 @@ export const LessonList: React.FC<LessonListProps> = ({
               </div>
 
               <h3 className="lesson-card-title">{lesson.title}</h3>
-              <p className="lesson-card-description">{lesson.description}</p>
+              {lesson.description.trim() && <p className="lesson-card-description">{lesson.description}</p>}
 
               <div className="lesson-meta-row">
                 <span className="meta-item">
@@ -90,27 +90,16 @@ export const LessonList: React.FC<LessonListProps> = ({
                 )}
               </div>
 
-              <div className="game-types-tags mt-3">
-                {lesson.games.map((g, idx) => (
-                  <span key={idx} className="game-type-tag">
-                    {g.type === 'cloze' && t.clozeLabel}
-                    {g.type === 'matching' && t.matchingLabel}
-                    {g.type === 'sentence_builder' && t.sentenceLabel}
-                    {g.type === 'error_spotter' && t.errorSpotterLabel}
-                    {g.type === 'word_scramble' && t.wordScrambleLabel}
-                  </span>
-                ))}
-              </div>
-
               <div className="lesson-card-footer mt-4">
                 <button
                   className="btn-primary full-width"
                   onClick={() => onSelectLesson(lesson)}
+                  disabled={lesson.games.length === 0}
                 >
                   <Play size={16} /> {t.startLearning}
                 </button>
               </div>
-            </div>
+            </article>
           );
         })}
 

@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import type { Lesson } from './types/lesson';
 import type { Language } from './utils/i18n';
 import { getStoredLanguage, saveStoredLanguage, translations } from './utils/i18n';
-import { getStoredLessons, saveStoredLessons } from './utils/storage';
+import { cacheStoredLessons, getStoredLessons, saveStoredLessons } from './utils/storage';
 import { fetchLessonsFromSupabase } from './utils/supabase';
 import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { AdminLogin } from './components/Admin/AdminLogin';
-import { GraduationCap, Settings, BookOpen, Globe } from 'lucide-react';
+import { GraduationCap, Settings, BookOpen } from 'lucide-react';
 
 export function App() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -24,9 +24,9 @@ export function App() {
     async function loadData() {
       setLoading(true);
       const remoteData = await fetchLessonsFromSupabase();
-      if (remoteData && remoteData.length > 0) {
+      if (remoteData !== null) {
         setLessons(remoteData);
-        saveStoredLessons(remoteData);
+        cacheStoredLessons(remoteData);
       } else {
         const localData = getStoredLessons();
         setLessons(localData);
@@ -63,28 +63,28 @@ export function App() {
       {/* Navigation Navbar */}
       <header className="navbar shadow-sm">
         <div className="navbar-container">
-          <div className="brand-logo" onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}>
+          <button className="brand-logo" onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}>
             <div className="logo-icon-wrapper">
               <BookOpen size={20} className="logo-icon" />
             </div>
             <span className="brand-name">{t.brandName}</span>
-          </div>
+          </button>
 
           <div className="flex items-center gap-3">
-            {/* Language Switcher */}
             <div className="lang-switcher-pill">
-              <Globe size={15} className="text-muted" />
               <button
                 className={`lang-btn ${lang === 'vi' ? 'active' : ''}`}
                 onClick={() => handleLanguageToggle('vi')}
+                aria-label="Dùng tiếng Việt"
               >
-                🇻🇳 VN
+                Tiếng Việt
               </button>
               <button
                 className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
                 onClick={() => handleLanguageToggle('en')}
+                aria-label="Use English"
               >
-                🇬🇧 EN
+                English
               </button>
             </div>
 
@@ -117,7 +117,7 @@ export function App() {
         {loading ? (
           <div className="loading-spinner-container">
             <div className="spinner" />
-            <p>{lang === 'vi' ? 'Đang tải dữ liệu bài học...' : 'Loading lessons...'}</p>
+            <p>{lang === 'vi' ? 'Đang mở bài học...' : 'Opening lessons...'}</p>
           </div>
         ) : (
           <>
@@ -156,9 +156,7 @@ export function App() {
         )}
       </main>
 
-      <footer className="app-footer">
-        <p>© {t.brandName} • {lang === 'vi' ? 'Nền tảng học Tiếng Anh tương tác' : 'Interactive English Learning Platform'}</p>
-      </footer>
+      <footer className="app-footer">{t.brandName}</footer>
     </div>
   );
 }

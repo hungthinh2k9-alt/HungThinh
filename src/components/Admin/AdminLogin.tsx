@@ -2,20 +2,11 @@ import React, { useState } from 'react';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { Lock, User, LogIn, AlertCircle } from 'lucide-react';
+import { getStoredAdminPassword } from '../../utils/adminAuth';
 
 interface AdminLoginProps {
   lang: Language;
   onLoginSuccess: () => void;
-}
-
-const PASSWORD_STORAGE_KEY = 'lingoquest_admin_password';
-
-export function getStoredAdminPassword(): string {
-  return localStorage.getItem(PASSWORD_STORAGE_KEY) || '123456';
-}
-
-export function setStoredAdminPassword(pass: string): void {
-  localStorage.setItem(PASSWORD_STORAGE_KEY, pass);
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({

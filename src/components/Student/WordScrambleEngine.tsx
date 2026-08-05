@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseWordScrambleItem } from '../../utils/parsers';
 import { CheckCircle2, HelpCircle, RotateCcw } from 'lucide-react';
+import type { Language } from '../../utils/i18n';
+import { translations } from '../../utils/i18n';
 
 interface WordScrambleEngineProps {
   game: Game;
+  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
 }
@@ -16,9 +19,11 @@ interface LetterTile {
 
 export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   game,
+  lang,
   onItemCompleted,
   onGameFinished,
 }) => {
+  const t = translations[lang];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bankTiles, setBankTiles] = useState<LetterTile[]>([]);
   const [chosenTiles, setChosenTiles] = useState<LetterTile[]>([]);
@@ -30,7 +35,8 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   const parsed = parseWordScrambleItem(currentRawItem, `ws-${currentIndex}`);
 
   useEffect(() => {
-    const tiles: LetterTile[] = parsed.scrambledLetters.map((char, idx) => ({
+    const nextParsed = parseWordScrambleItem(game.items[currentIndex], `ws-${currentIndex}`);
+    const tiles: LetterTile[] = nextParsed.scrambledLetters.map((char, idx) => ({
       id: `tile-${idx}-${Date.now()}`,
       char,
     }));
@@ -107,14 +113,14 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{t.question} {currentIndex + 1}/{game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
       {parsed.hint && (
         <div className="hint-banner mt-2">
           <button className="hint-btn" onClick={() => setShowHint(!showHint)}>
-            <HelpCircle size={16} /> {showHint ? 'Hide Hint' : 'Show Hint'}
+            <HelpCircle size={16} /> {showHint ? t.hideHint : t.showHint}
           </button>
           {showHint && <span className="hint-text">{parsed.hint}</span>}
         </div>
@@ -142,10 +148,10 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
       {/* Letter Bank */}
       <div className="letter-bank-container mt-4">
         <div className="bank-header">
-          <span>Click or type letters:</span>
+          <span>{t.chooseLetters}</span>
           {chosenTiles.length > 0 && !submitted && (
             <button className="btn-text" onClick={handleReset}>
-              <RotateCcw size={14} /> Clear
+              <RotateCcw size={14} /> {t.clearAll}
             </button>
           )}
         </div>
@@ -168,10 +174,10 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">{isCorrect ? 'Correct Spelling!' : 'Incorrect Spelling!'}</p>
+              <p className="feedback-title">{isCorrect ? t.correctSpelling : t.incorrectSpelling}</p>
               {!isCorrect && (
                 <p className="feedback-detail">
-                  Target word: <strong>{parsed.originalWord}</strong>
+                  {t.correctWord} <strong>{parsed.originalWord}</strong>
                 </p>
               )}
             </div>
@@ -186,11 +192,11 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
             onClick={handleCheck}
             disabled={bankTiles.length > 0}
           >
-            Check Word
+            {t.checkWord}
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? t.nextQuestion : t.finishSection}
           </button>
         )}
       </div>

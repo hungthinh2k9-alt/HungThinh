@@ -29,7 +29,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [totalQuestionsAnswered, setTotalQuestionsAnswered] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [startTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const t = translations[lang];
@@ -66,6 +66,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     } else {
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
       saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime);
+      setElapsedSeconds(totalTime);
       setIsFinished(true);
     }
   };
@@ -91,6 +92,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     return (
       <LessonSummary
         lesson={lesson}
+        lang={lang}
         score={score}
         maxStreak={maxStreak}
         totalQuestions={totalQuestionsAnswered}
@@ -103,6 +105,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setScore(0);
           setCorrectAnswersCount(0);
           setTotalQuestionsAnswered(0);
+          setElapsedSeconds(0);
+          setStartTime(Date.now());
           setIsFinished(false);
         }}
         onBackToDashboard={onBackToDashboard}
@@ -161,6 +165,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <ClozeEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
+            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -170,6 +175,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <MatchingEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
+            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -179,6 +185,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <SentenceBuilderEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
+            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -188,6 +195,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <ErrorSpotterEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
+            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -197,6 +205,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <WordScrambleEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
+            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />

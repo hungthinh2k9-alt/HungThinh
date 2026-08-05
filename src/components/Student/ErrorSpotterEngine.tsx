@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseErrorSpotterItem } from '../../utils/parsers';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
+import type { Language } from '../../utils/i18n';
+import { translations } from '../../utils/i18n';
 
 interface ErrorSpotterEngineProps {
   game: Game;
+  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
 }
 
 export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
   game,
+  lang,
   onItemCompleted,
   onGameFinished,
 }) => {
+  const t = translations[lang];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [correctionInput, setCorrectionInput] = useState<string>('');
@@ -66,7 +71,7 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{t.question} {currentIndex + 1}/{game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
@@ -81,7 +86,7 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
                   type="text"
                   value={correctionInput}
                   onChange={(e) => setCorrectionInput(e.target.value)}
-                  placeholder={`Correct '${token.text}'`}
+                  placeholder={lang === 'vi' ? `Sửa “${token.text}”` : `Fix “${token.text}”`}
                   disabled={submitted}
                   autoFocus
                   className="error-correction-input"
@@ -106,7 +111,7 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
       </div>
 
       <div className="hint-subtext mt-2">
-        💡 Click on the incorrect word in the sentence above to fix it.
+        {t.clickWrongWord}
       </div>
 
       {submitted && (
@@ -115,11 +120,11 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
             {isCorrect ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
             <div>
               <p className="feedback-title">
-                {isCorrect ? 'Great eye! You spotted and fixed the error.' : 'Not quite right!'}
+                {isCorrect ? t.greatEye : t.notQuiteRight}
               </p>
               {!isCorrect && (
                 <p className="feedback-detail">
-                  Correct sentence: <strong>{parsed.fullSentence}</strong>
+                  {t.correctSentence} <strong>{parsed.fullSentence}</strong>
                 </p>
               )}
             </div>
@@ -134,11 +139,11 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
             onClick={handleCheck}
             disabled={!selectedTokenId || correctionInput.trim().length === 0}
           >
-            Submit Correction
+            {t.submitCorrection}
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? t.nextQuestion : t.finishSection}
           </button>
         )}
       </div>

@@ -13,18 +13,22 @@ export function getStoredLessons(): Lesson[] {
     const data = localStorage.getItem(LESSONS_STORAGE_KEY);
     if (!data) return [];
     return JSON.parse(data);
-  } catch (err) {
+  } catch {
     return [];
   }
 }
 
 export function saveStoredLessons(lessons: Lesson[]): void {
   try {
-    localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
+    cacheStoredLessons(lessons);
     saveAllLessonsToSupabase(lessons);
   } catch (err) {
     console.error('Failed to save lessons', err);
   }
+}
+
+export function cacheStoredLessons(lessons: Lesson[]): void {
+  localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
 }
 
 export function saveSingleStoredLesson(lesson: Lesson): void {
@@ -61,7 +65,7 @@ export function getStoredProgress(): StudentProgress {
     const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
     if (!data) return { completedLessons: {} };
     return JSON.parse(data);
-  } catch (err) {
+  } catch {
     return { completedLessons: {} };
   }
 }

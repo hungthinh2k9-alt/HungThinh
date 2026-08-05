@@ -20,8 +20,8 @@ export const supabase = isSupabaseConfigured
 /**
  * Fetch all lessons directly from Supabase
  */
-export async function fetchLessonsFromSupabase(): Promise<Lesson[]> {
-  if (!supabase) return [];
+export async function fetchLessonsFromSupabase(): Promise<Lesson[] | null> {
+  if (!supabase) return null;
   try {
     const { data, error } = await supabase
       .from('lessons')
@@ -30,12 +30,12 @@ export async function fetchLessonsFromSupabase(): Promise<Lesson[]> {
 
     if (error) {
       console.error('Supabase fetch error:', error.message);
-      return [];
+      return null;
     }
     return (data as Lesson[]) || [];
   } catch (err) {
     console.error('Supabase request exception:', err);
-    return [];
+    return null;
   }
 }
 

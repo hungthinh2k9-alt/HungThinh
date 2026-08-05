@@ -7,12 +7,14 @@ interface LessonEditorProps {
   lesson: Lesson;
   onSave: (savedLesson: Lesson) => void;
   onCancel: () => void;
+  isNew?: boolean;
 }
 
 export const LessonEditor: React.FC<LessonEditorProps> = ({
   lesson: initialLesson,
   onSave,
   onCancel,
+  isNew = false,
 }) => {
   const [lesson, setLesson] = useState<Lesson>(initialLesson);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -68,6 +70,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       setErrorMsg('Bài học phải có ít nhất 1 bài tập.');
       return;
     }
+    if (lesson.games.some((game) => !game.instruction.trim() || game.items.length === 0 || game.items.some((item) => !item.trim()))) {
+      setErrorMsg('Mỗi bài tập cần có yêu cầu và ít nhất một câu hỏi đầy đủ.');
+      return;
+    }
 
     setErrorMsg(null);
     onSave(lesson);
@@ -80,7 +86,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
           <ArrowLeft size={18} /> Quay lại danh sách
         </button>
         <h2 className="editor-title">
-          {initialLesson.lesson_id ? 'Chỉnh Sửa Bài Học' : 'Tạo Bài Học Mới'}
+          {isNew ? 'Tạo bài học' : 'Sửa bài học'}
         </h2>
         <button className="btn-primary" onClick={handleSaveClick}>
           <Save size={18} /> Lưu bài học
@@ -99,41 +105,30 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         <h3 className="card-section-title">Thông tin bài học</h3>
         <div className="grid-2-cols mt-3">
           <div className="form-group">
-            <label className="form-label">Mã bài học:</label>
-            <input
-              type="text"
-              value={lesson.lesson_id}
-              onChange={(e) => handleFieldChange('lesson_id', e.target.value)}
-              placeholder="e.g. topic-01"
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Phân loại:</label>
+            <label className="form-label">Nhóm bài học</label>
             <input
               type="text"
               value={lesson.category || ''}
               onChange={(e) => handleFieldChange('category', e.target.value)}
-              placeholder="e.g. Từ vựng & Ngữ pháp"
+              placeholder="Ví dụ: Từ vựng"
               className="form-input"
             />
           </div>
         </div>
 
         <div className="form-group mt-3">
-          <label className="form-label">Tiêu đề bài học:</label>
+          <label className="form-label">Tên bài học</label>
           <input
             type="text"
             value={lesson.title}
             onChange={(e) => handleFieldChange('title', e.target.value)}
-            placeholder="e.g. Simple Present & Daily Routines"
+            placeholder="Ví dụ: Một ngày của em"
             className="form-input"
           />
         </div>
 
         <div className="form-group mt-3">
-          <label className="form-label">Mô tả ngắn:</label>
+          <label className="form-label">Giới thiệu ngắn</label>
           <textarea
             value={lesson.description}
             onChange={(e) => handleFieldChange('description', e.target.value)}

@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseClozeItem } from '../../utils/parsers';
 import { CheckCircle2, HelpCircle } from 'lucide-react';
+import type { Language } from '../../utils/i18n';
+import { translations } from '../../utils/i18n';
 
 interface ClozeEngineProps {
   game: Game;
+  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
 }
 
 export const ClozeEngine: React.FC<ClozeEngineProps> = ({
   game,
+  lang,
   onItemCompleted,
   onGameFinished,
 }) => {
+  const t = translations[lang];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInputs, setUserInputs] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -69,7 +74,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{t.question} {currentIndex + 1}/{game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
@@ -108,7 +113,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
                   onClick={() =>
                     setShowHint((prev) => ({ ...prev, [seg.id]: !prev[seg.id] }))
                   }
-                  title="Toggle Hint"
+                  title={t.showHint}
                 >
                   <HelpCircle size={14} />
                   {showHint[seg.id] && <span className="hint-pill">{seg.hint}</span>}
@@ -124,10 +129,10 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">{isCorrect ? 'Well done!' : 'Keep practicing!'}</p>
+              <p className="feedback-title">{isCorrect ? t.wellDone : t.keepPracticing}</p>
               {!isCorrect && (
                 <p className="feedback-detail">
-                  Correct sentence: <strong>{parsed.fullTargetSentence}</strong>
+                  {t.correctSentence} <strong>{parsed.fullTargetSentence}</strong>
                 </p>
               )}
             </div>
@@ -142,11 +147,11 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
             onClick={handleCheck}
             disabled={!isFormComplete}
           >
-            Check Answer
+            {t.checkAnswer}
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? t.nextQuestion : t.finishSection}
           </button>
         )}
       </div>

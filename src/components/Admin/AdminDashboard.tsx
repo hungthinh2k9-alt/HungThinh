@@ -101,6 +101,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return (
       <LessonEditor
         lesson={editingLesson}
+        isNew={!lessons.some((lesson) => lesson.lesson_id === editingLesson.lesson_id)}
         onSave={handleSaveLesson}
         onCancel={() => setEditingLesson(null)}
       />

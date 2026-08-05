@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
-import { getStoredAdminPassword, setStoredAdminPassword } from './AdminLogin';
+import { getStoredAdminPassword, setStoredAdminPassword } from '../../utils/adminAuth';
 import { X, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ChangePasswordModalProps {
