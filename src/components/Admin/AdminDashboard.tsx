@@ -10,10 +10,9 @@ import {
   ArrowUp,
   ArrowDown,
   FileCode,
-  RotateCcw,
   BookOpen,
 } from 'lucide-react';
-import { saveStoredLessons, resetAllStorage } from '../../utils/storage';
+import { saveSingleStoredLesson, deleteStoredLesson, saveStoredLessons } from '../../utils/storage';
 
 interface AdminDashboardProps {
   lessons: Lesson[];
@@ -29,15 +28,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateNewLesson = () => {
     const newLesson: Lesson = {
-      lesson_id: `topic-0${lessons.length + 1}`,
-      title: 'New Custom Topic',
-      description: 'Master new English concepts with interactive games.',
-      category: 'General English',
+      lesson_id: `topic-${Date.now().toString().slice(-4)}`,
+      title: 'Chủ đề mới',
+      description: 'Nhập nội dung và bài tập cho chủ đề này...',
+      category: 'Từ vựng & Ngữ pháp',
       games: [
         {
           id: `g1-${Date.now()}`,
           type: 'cloze',
-          instruction: 'Fill in the missing words.',
+          instruction: 'Điền từ thích hợp vào chỗ trống.',
           items: ['She is feeling very [happy|vui vẻ] today.'],
         },
       ],
@@ -56,15 +55,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } else {
       updated = [...lessons, savedLesson];
     }
-    saveStoredLessons(updated);
+
+    saveSingleStoredLesson(savedLesson);
     onLessonsUpdated(updated);
     setEditingLesson(null);
   };
 
   const handleDeleteLesson = (lessonId: string) => {
-    if (window.confirm('Are you sure you want to delete this lesson?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa bài học này không?')) {
       const updated = lessons.filter((l) => l.lesson_id !== lessonId);
-      saveStoredLessons(updated);
+      deleteStoredLesson(lessonId);
       onLessonsUpdated(updated);
     }
   };
@@ -72,12 +72,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleDuplicateLesson = (lesson: Lesson) => {
     const duplicated: Lesson = {
       ...lesson,
-      lesson_id: `${lesson.lesson_id}-copy-${Date.now()}`,
-      title: `${lesson.title} (Copy)`,
+      lesson_id: `${lesson.lesson_id}-copy-${Date.now().toString().slice(-4)}`,
+      title: `${lesson.title} (Bản sao)`,
     };
-    const updated = [...lessons, duplicated];
-    saveStoredLessons(updated);
-    onLessonsUpdated(updated);
+    saveSingleStoredLesson(duplicated);
+    onLessonsUpdated([...lessons, duplicated]);
   };
 
   const handleMoveLesson = (index: number, direction: 'up' | 'down') => {
@@ -87,13 +86,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
     saveStoredLessons(updated);
     onLessonsUpdated(updated);
-  };
-
-  const handleResetToDefault = () => {
-    if (window.confirm('Reset all lessons to default seed data? Custom edits will be restored to original specs.')) {
-      resetAllStorage();
-      window.location.reload();
-    }
   };
 
   const handleApplyJsonImport = (importedLessons: Lesson[]) => {
@@ -114,30 +106,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="admin-dashboard-container animate-fade-in">
-      <div className="admin-header-banner shadow-md">
+      <div className="admin-header-banner shadow-sm">
         <div>
-          <h1 className="admin-title">Teacher Admin CMS Panel</h1>
+          <h1 className="admin-title">Bảng Quản Lý Bài Học</h1>
           <p className="admin-subtitle">
-            100% data-driven lesson & game engine control panel. Edit rules, text, game types, and JSON directly.
+            Tạo mới, chỉnh sửa bài tập và quản lý danh sách các chủ đề học tập cho học sinh.
           </p>
         </div>
 
         <div className="admin-header-actions">
           <button className="btn-secondary" onClick={() => setShowJsonModal(true)}>
-            <FileCode size={18} /> JSON Import/Export
+            <FileCode size={18} /> Nhập / Xuất JSON
           </button>
           <button className="btn-primary" onClick={handleCreateNewLesson}>
-            <Plus size={18} /> Create Lesson
+            <Plus size={18} /> Tạo bài học mới
           </button>
         </div>
       </div>
 
       <div className="admin-lessons-list mt-6 shadow-sm">
         <div className="table-header-row">
-          <span>Topic Title & Info</span>
-          <span>Category</span>
-          <span>Games Count</span>
-          <span>Actions</span>
+          <span>Tên chủ đề</span>
+          <span>Phân loại</span>
+          <span>Số trò chơi</span>
+          <span>Thao tác</span>
         </div>
 
         {lessons.map((lesson, idx) => (
@@ -150,54 +142,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             <div className="lesson-category-cell">
               <span className="category-pill-small">
-                {lesson.category || 'General'}
+                {lesson.category || 'Chung'}
               </span>
             </div>
 
             <div className="lesson-games-count-cell">
-              <span className="count-badge">{lesson.games.length} Games</span>
-              <div className="game-types-micro mt-1">
-                {lesson.games.map((g) => g.type.charAt(0).toUpperCase()).join(' • ')}
-              </div>
+              <span className="count-badge">{lesson.games.length} Trò chơi</span>
             </div>
 
             <div className="lesson-actions-cell">
               <button
                 className="btn-icon-action"
                 onClick={() => setEditingLesson(lesson)}
-                title="Edit Lesson & Games"
+                title="Chỉnh sửa bài học"
               >
-                <Edit3 size={16} /> Edit
+                <Edit3 size={15} /> Sửa
               </button>
               <button
                 className="btn-icon-action"
                 onClick={() => handleDuplicateLesson(lesson)}
-                title="Duplicate Lesson"
+                title="Nhân bản bài học"
               >
-                <Copy size={16} />
+                <Copy size={15} /> Sao chép
               </button>
               <button
                 className="btn-icon-action"
                 onClick={() => handleMoveLesson(idx, 'up')}
                 disabled={idx === 0}
-                title="Move Up"
+                title="Di chuyển lên"
               >
-                <ArrowUp size={16} />
+                <ArrowUp size={15} />
               </button>
               <button
                 className="btn-icon-action"
                 onClick={() => handleMoveLesson(idx, 'down')}
                 disabled={idx === lessons.length - 1}
-                title="Move Down"
+                title="Di chuyển xuống"
               >
-                <ArrowDown size={16} />
+                <ArrowDown size={15} />
               </button>
               <button
                 className="btn-icon-action danger"
                 onClick={() => handleDeleteLesson(lesson.lesson_id)}
-                title="Delete Lesson"
+                title="Xóa bài học"
               >
-                <Trash2 size={16} />
+                <Trash2 size={15} /> Xóa
               </button>
             </div>
           </div>
@@ -205,16 +194,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {lessons.length === 0 && (
           <div className="empty-state-box">
-            <BookOpen size={48} className="empty-icon" />
-            <p>No lessons configured yet. Click 'Create Lesson' to add one!</p>
+            <BookOpen size={44} className="empty-icon" />
+            <p>Chưa có bài học nào. Bấm 'Tạo bài học mới' để bắt đầu!</p>
           </div>
         )}
-      </div>
-
-      <div className="admin-footer-row mt-6">
-        <button className="btn-text-danger" onClick={handleResetToDefault}>
-          <RotateCcw size={14} /> Reset Storage to Sample Seed Lessons
-        </button>
       </div>
 
       {showJsonModal && (

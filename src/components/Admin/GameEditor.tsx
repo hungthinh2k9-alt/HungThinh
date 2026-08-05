@@ -19,29 +19,29 @@ interface GameEditorProps {
 
 const GAME_SYNTAX_GUIDES: Record<GameType, { label: string; placeholder: string; example: string }> = {
   cloze: {
-    label: 'Cloze Test Syntax',
-    placeholder: 'Full mask: [word|hint] or Partial mask: p[ar]tial',
+    label: 'Cú pháp bài tập Điền từ',
+    placeholder: 'Từ che ẩn: [target|gợi ý] hoặc che một phần: h[av]e',
     example: 'She is feeling very [happy|vui vẻ] today.\nThey h[av]e breakfast at 7 AM.',
   },
   matching: {
-    label: 'Matching Pair Syntax',
-    placeholder: 'Term => Meaning',
+    label: 'Cú pháp bài tập Nối từ',
+    placeholder: 'Từ tiếng Anh => Nghĩa tiếng Việt',
     example: 'Always => Luôn luôn\nUsually => Thường xuyên\nNever => Không bao giờ',
   },
   sentence_builder: {
-    label: 'Sentence Builder Syntax',
-    placeholder: 'Block 1 | Block 2 | Block 3',
+    label: 'Cú pháp bài tập Xếp câu',
+    placeholder: 'Cụm từ 1 | Cụm từ 2 | Cụm từ 3',
     example: 'She | usually gets up | early in the morning.\nThey | do not like | fast food.',
   },
   error_spotter: {
-    label: 'Error Spotter Syntax',
-    placeholder: 'Prefix [wrong_word -> correct_word] Suffix',
+    label: 'Cú pháp bài tập Sửa lỗi sai',
+    placeholder: 'Đoạn trước [từ_sai -> từ_đúng] Đoạn sau',
     example: 'She [go -> goes] to school every day.\nThey [is -> are] watching a match.',
   },
   word_scramble: {
-    label: 'Word Scramble Syntax',
-    placeholder: 'word or word|hint',
-    example: 'beautiful|Very pleasing to look at\nchallenge|A demanding task',
+    label: 'Cú pháp bài tập Xếp chữ cái',
+    placeholder: 'Từ_cần_xếp hoặc Từ_cần_xếp|Gợi ý',
+    example: 'beautiful|Rất đẹp\nchallenge|Thử thách',
   },
 };
 
@@ -108,20 +108,20 @@ export const GameEditor: React.FC<GameEditorProps> = ({
   const syntaxInfo = GAME_SYNTAX_GUIDES[game.type];
 
   return (
-    <div className="game-editor-card shadow-md">
+    <div className="game-editor-card shadow-sm">
       <div className="game-editor-header">
         <div className="flex items-center gap-2">
-          <span className="game-number-badge">Game #{gameIndex + 1}</span>
+          <span className="game-number-badge">Bài tập #{gameIndex + 1}</span>
           <select
             value={game.type}
             onChange={(e) => handleTypeChange(e.target.value as GameType)}
             className="game-type-select"
           >
-            <option value="cloze">Cloze Test</option>
-            <option value="matching">Matching Pairs</option>
-            <option value="sentence_builder">Sentence Builder</option>
-            <option value="error_spotter">Error Spotter</option>
-            <option value="word_scramble">Word Scramble</option>
+            <option value="cloze">Điền từ (Cloze)</option>
+            <option value="matching">Nối từ (Matching)</option>
+            <option value="sentence_builder">Xếp câu (Sentence Builder)</option>
+            <option value="error_spotter">Sửa lỗi sai (Error Spotter)</option>
+            <option value="word_scramble">Xếp chữ cái (Word Scramble)</option>
           </select>
         </div>
 
@@ -130,9 +130,9 @@ export const GameEditor: React.FC<GameEditorProps> = ({
             type="button"
             className="btn-icon-small"
             onClick={() => setShowPreview(true)}
-            title="Live Preview Game"
+            title="Xem trước bài tập"
           >
-            <Eye size={16} /> Preview
+            <Eye size={15} /> Xem trước
           </button>
           {onMoveUp && (
             <button
@@ -140,9 +140,9 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               className="btn-icon-small"
               onClick={onMoveUp}
               disabled={gameIndex === 0}
-              title="Move Up"
+              title="Lên trên"
             >
-              <ArrowUp size={16} />
+              <ArrowUp size={15} />
             </button>
           )}
           {onMoveDown && (
@@ -151,29 +151,29 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               className="btn-icon-small"
               onClick={onMoveDown}
               disabled={gameIndex === totalGames - 1}
-              title="Move Down"
+              title="Xuống dưới"
             >
-              <ArrowDown size={16} />
+              <ArrowDown size={15} />
             </button>
           )}
           <button
             type="button"
             className="btn-icon-small danger"
             onClick={onDelete}
-            title="Delete Game"
+            title="Xóa bài tập"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>
 
       <div className="form-group mt-3">
-        <label className="form-label">Instruction Text for Student:</label>
+        <label className="form-label">Yêu cầu / Hướng dẫn bài tập:</label>
         <input
           type="text"
           value={game.instruction}
           onChange={(e) => handleInstructionChange(e.target.value)}
-          placeholder="e.g. Fill in the missing letters or words."
+          placeholder="Ví dụ: Điền từ thích hợp vào chỗ trống."
           className="form-input"
         />
       </div>
@@ -188,9 +188,9 @@ export const GameEditor: React.FC<GameEditorProps> = ({
 
       <div className="items-list-container mt-4">
         <div className="items-list-header">
-          <label className="form-label">Game Items ({game.items.length}):</label>
+          <label className="form-label">Danh sách câu hỏi ({game.items.length}):</label>
           <button type="button" className="btn-text-small" onClick={handleAddItem}>
-            <Plus size={14} /> Add Item
+            <Plus size={14} /> Thêm câu hỏi
           </button>
         </div>
 
@@ -236,11 +236,11 @@ export const GameEditor: React.FC<GameEditorProps> = ({
       {/* Live Preview Modal */}
       {showPreview && (
         <div className="modal-backdrop">
-          <div className="modal-content large shadow-2xl">
+          <div className="modal-content large shadow-xl">
             <div className="modal-header">
-              <h3>Live Game Preview</h3>
+              <h3>Xem trước bài tập</h3>
               <button className="btn-icon" onClick={() => setShowPreview(false)}>
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body">

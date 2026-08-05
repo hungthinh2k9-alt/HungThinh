@@ -31,7 +31,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     const newGame: Game = {
       id: `g-${Date.now()}`,
       type,
-      instruction: 'Fill in the missing fields correctly.',
+      instruction: 'Điền từ thích hợp vào chỗ trống.',
       items: ['Sample item [target]'],
     };
     setLesson((prev) => ({
@@ -57,15 +57,15 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
   const handleSaveClick = () => {
     if (!lesson.lesson_id.trim()) {
-      setErrorMsg('Lesson ID is required.');
+      setErrorMsg('Mã bài học (Lesson ID) không được để trống.');
       return;
     }
     if (!lesson.title.trim()) {
-      setErrorMsg('Lesson Title is required.');
+      setErrorMsg('Tiêu đề bài học không được để trống.');
       return;
     }
     if (lesson.games.length === 0) {
-      setErrorMsg('At least one game is required in the lesson.');
+      setErrorMsg('Bài học phải có ít nhất 1 bài tập trò chơi.');
       return;
     }
 
@@ -77,13 +77,13 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     <div className="lesson-editor-container animate-fade-in">
       <div className="admin-editor-header shadow-sm">
         <button className="btn-secondary" onClick={onCancel}>
-          <ArrowLeft size={18} /> Back to CMS
+          <ArrowLeft size={18} /> Quay lại danh sách
         </button>
         <h2 className="editor-title">
-          {initialLesson.lesson_id ? 'Edit Lesson' : 'Create New Lesson'}
+          {initialLesson.lesson_id ? 'Chỉnh Sửa Bài Học' : 'Tạo Bài Học Mới'}
         </h2>
         <button className="btn-primary" onClick={handleSaveClick}>
-          <Save size={18} /> Save Lesson
+          <Save size={18} /> Lưu bài học
         </button>
       </div>
 
@@ -95,11 +95,11 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       )}
 
       {/* Lesson Metadata Form */}
-      <div className="metadata-card shadow-md mt-4">
-        <h3 className="card-section-title">Lesson Information</h3>
+      <div className="metadata-card shadow-sm mt-4">
+        <h3 className="card-section-title">Thông tin bài học</h3>
         <div className="grid-2-cols mt-3">
           <div className="form-group">
-            <label className="form-label">Lesson ID (slug):</label>
+            <label className="form-label">Mã chủ đề (Slug ID):</label>
             <input
               type="text"
               value={lesson.lesson_id}
@@ -110,19 +110,19 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Category / Module:</label>
+            <label className="form-label">Danh mục / Phân loại:</label>
             <input
               type="text"
               value={lesson.category || ''}
               onChange={(e) => handleFieldChange('category', e.target.value)}
-              placeholder="e.g. Grammar & Vocabulary"
+              placeholder="e.g. Từ vựng & Ngữ pháp"
               className="form-input"
             />
           </div>
         </div>
 
         <div className="form-group mt-3">
-          <label className="form-label">Title:</label>
+          <label className="form-label">Tiêu đề bài học:</label>
           <input
             type="text"
             value={lesson.title}
@@ -133,11 +133,11 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         </div>
 
         <div className="form-group mt-3">
-          <label className="form-label">Description:</label>
+          <label className="form-label">Mô tả ngắn:</label>
           <textarea
             value={lesson.description}
             onChange={(e) => handleFieldChange('description', e.target.value)}
-            placeholder="A short overview of what students will learn in this topic..."
+            placeholder="Mô tả nội dung bài học cho học sinh..."
             rows={2}
             className="form-textarea"
           />
@@ -147,42 +147,42 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       {/* Games List Builder */}
       <div className="games-builder-section mt-6">
         <div className="section-header">
-          <h3>Interactive Games Builder ({lesson.games.length})</h3>
-          <div className="flex gap-2">
+          <h3>Danh sách bài tập trò chơi ({lesson.games.length})</h3>
+          <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('cloze')}
             >
-              <Plus size={14} /> Cloze
+              <Plus size={14} /> Điền từ (Cloze)
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('matching')}
             >
-              <Plus size={14} /> Matching
+              <Plus size={14} /> Nối từ (Matching)
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('sentence_builder')}
             >
-              <Plus size={14} /> Sentence
+              <Plus size={14} /> Xếp câu (Sentence)
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('error_spotter')}
             >
-              <Plus size={14} /> Error Spotter
+              <Plus size={14} /> Sửa lỗi sai
             </button>
             <button
               type="button"
               className="btn-secondary-small"
               onClick={() => handleAddGame('word_scramble')}
             >
-              <Plus size={14} /> Scramble
+              <Plus size={14} /> Xếp chữ cái
             </button>
           </div>
         </div>

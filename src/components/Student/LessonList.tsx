@@ -25,11 +25,11 @@ export const LessonList: React.FC<LessonListProps> = ({
   return (
     <div className="dashboard-container">
       {/* Hero Banner */}
-      <div className="hero-banner shadow-lg">
+      <div className="hero-banner shadow-sm">
         <div className="hero-content">
-          <h1 className="hero-title">Master English Text Games</h1>
+          <h1 className="hero-title">Học Tiếng Anh Tương Tác</h1>
           <p className="hero-subtitle">
-            Interactive cloze tests, sentence builders, matching pairs, and error spotters. Zero fluff, 100% dynamic learning.
+            Luyện tập từ vựng, ngữ pháp và cấu trúc câu thông qua các bài tập tương tác sinh động.
           </p>
         </div>
       </div>
@@ -40,14 +40,14 @@ export const LessonList: React.FC<LessonListProps> = ({
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search topics, grammar rules, or keywords..."
+            placeholder="Tìm kiếm chủ đề, từ khóa bài học..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
         </div>
         <div className="lessons-count-tag">
-          {filteredLessons.length} {filteredLessons.length === 1 ? 'Topic' : 'Topics'} Available
+          {filteredLessons.length} {filteredLessons.length === 1 ? 'Chủ đề' : 'Chủ đề'}
         </div>
       </div>
 
@@ -58,12 +58,12 @@ export const LessonList: React.FC<LessonListProps> = ({
           const isCompleted = !!stats;
 
           return (
-            <div key={lesson.lesson_id} className="lesson-card shadow-md">
+            <div key={lesson.lesson_id} className="lesson-card shadow-sm">
               <div className="lesson-card-header">
-                <span className="category-pill">{lesson.category || 'English Lesson'}</span>
+                <span className="category-pill">{lesson.category || 'Bài học Tiếng Anh'}</span>
                 {isCompleted && (
                   <span className="completed-pill">
-                    <CheckCircle2 size={14} /> Completed
+                    <CheckCircle2 size={14} /> Đã hoàn thành
                   </span>
                 )}
               </div>
@@ -73,12 +73,12 @@ export const LessonList: React.FC<LessonListProps> = ({
 
               <div className="lesson-meta-row">
                 <span className="meta-item">
-                  <Layers size={14} /> {lesson.games.length} Interactive Games
+                  <Layers size={14} /> {lesson.games.length} Bài tập
                 </span>
                 {stats && (
                   <>
                     <span className="meta-item">
-                      <Trophy size={14} /> High: {stats.highScore}
+                      <Trophy size={14} /> Điểm cao: {stats.highScore}
                     </span>
                     <span className="meta-item">
                       <Clock size={14} /> {Math.floor(stats.bestTimeSeconds / 60)}m {stats.bestTimeSeconds % 60}s
@@ -89,8 +89,12 @@ export const LessonList: React.FC<LessonListProps> = ({
 
               <div className="game-types-tags mt-3">
                 {lesson.games.map((g, idx) => (
-                  <span key={idx} className="game-type-tag">
-                    {g.type.replace('_', ' ')}
+                  <span key={idx} className={`game-type-tag ${g.type}`}>
+                    {g.type === 'cloze' && 'Điền từ'}
+                    {g.type === 'matching' && 'Nối từ'}
+                    {g.type === 'sentence_builder' && 'Xếp câu'}
+                    {g.type === 'error_spotter' && 'Sửa lỗi'}
+                    {g.type === 'word_scramble' && 'Xếp chữ'}
                   </span>
                 ))}
               </div>
@@ -100,7 +104,7 @@ export const LessonList: React.FC<LessonListProps> = ({
                   className="btn-primary full-width"
                   onClick={() => onSelectLesson(lesson)}
                 >
-                  <Play size={16} /> Start Learning
+                  <Play size={16} /> Bắt đầu học
                 </button>
               </div>
             </div>
@@ -109,8 +113,8 @@ export const LessonList: React.FC<LessonListProps> = ({
 
         {filteredLessons.length === 0 && (
           <div className="empty-state-box">
-            <BookOpen size={48} className="empty-icon" />
-            <p>No topics match your search criteria.</p>
+            <BookOpen size={44} className="empty-icon" />
+            <p>Không tìm thấy bài học nào phù hợp với từ khóa.</p>
           </div>
         )}
       </div>

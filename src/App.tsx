@@ -5,24 +5,26 @@ import { fetchLessonsFromSupabase } from './utils/supabase';
 import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
-import { GraduationCap, Settings, Sparkles } from 'lucide-react';
+import { GraduationCap, Settings, BookOpen } from 'lucide-react';
 
 export function App() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
     async function loadData() {
-      const localData = getStoredLessons();
-      setLessons(localData);
-
-      // Attempt to load live remote data from Supabase
+      setLoading(true);
       const remoteData = await fetchLessonsFromSupabase();
       if (remoteData && remoteData.length > 0) {
         setLessons(remoteData);
         saveStoredLessons(remoteData);
+      } else {
+        const localData = getStoredLessons();
+        setLessons(localData);
       }
+      setLoading(false);
     }
     loadData();
   }, []);
@@ -43,14 +45,13 @@ export function App() {
   return (
     <div className="app-shell">
       {/* Navigation Navbar */}
-      <header className="navbar shadow-md">
+      <header className="navbar shadow-sm">
         <div className="navbar-container">
           <div className="brand-logo" onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}>
             <div className="logo-icon-wrapper">
-              <Sparkles size={22} className="logo-sparkle" />
+              <BookOpen size={20} className="logo-icon" />
             </div>
             <span className="brand-name">LingoQuest</span>
-            <span className="brand-badge">Text Engine</span>
           </div>
 
           <nav className="nav-tabs">
@@ -61,7 +62,7 @@ export function App() {
                 setSelectedLesson(null);
               }}
             >
-              <GraduationCap size={18} /> Student View
+              <GraduationCap size={18} /> Giao diện Học sinh
             </button>
             <button
               className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
@@ -70,7 +71,7 @@ export function App() {
                 setSelectedLesson(null);
               }}
             >
-              <Settings size={18} /> Teacher Admin CMS
+              <Settings size={18} /> Quản lý Giáo viên
             </button>
           </nav>
         </div>
@@ -78,30 +79,39 @@ export function App() {
 
       {/* Main View Area */}
       <main className="main-content-wrapper">
-        {activeTab === 'student' && (
-          selectedLesson ? (
-            <GameContainer
-              lesson={selectedLesson}
-              onBackToDashboard={handleBackToDashboard}
-            />
-          ) : (
-            <LessonList
-              lessons={lessons}
-              onSelectLesson={handleSelectLesson}
-            />
-          )
-        )}
+        {loading ? (
+          <div className="loading-spinner-container">
+            <div className="spinner" />
+            <p>Đang tải dữ liệu bài học...</p>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'student' && (
+              selectedLesson ? (
+                <GameContainer
+                  lesson={selectedLesson}
+                  onBackToDashboard={handleBackToDashboard}
+                />
+              ) : (
+                <LessonList
+                  lessons={lessons}
+                  onSelectLesson={handleSelectLesson}
+                />
+              )
+            )}
 
-        {activeTab === 'admin' && (
-          <AdminDashboard
-            lessons={lessons}
-            onLessonsUpdated={handleLessonsUpdated}
-          />
+            {activeTab === 'admin' && (
+              <AdminDashboard
+                lessons={lessons}
+                onLessonsUpdated={handleLessonsUpdated}
+              />
+            )}
+          </>
         )}
       </main>
 
       <footer className="app-footer">
-        <p>100% Data-Driven Interactive Text-Only Learning Platform • Built with React & Vite & Supabase</p>
+        <p>© LingoQuest • Nền tảng học Tiếng Anh tương tác cho học sinh</p>
       </footer>
     </div>
   );

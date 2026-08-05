@@ -18,10 +18,10 @@ export const supabase = isSupabaseConfigured
   : null;
 
 /**
- * Fetch lessons from Supabase table 'lessons'
+ * Fetch all lessons directly from Supabase
  */
-export async function fetchLessonsFromSupabase(): Promise<Lesson[] | null> {
-  if (!supabase) return null;
+export async function fetchLessonsFromSupabase(): Promise<Lesson[]> {
+  if (!supabase) return [];
   try {
     const { data, error } = await supabase
       .from('lessons')
@@ -29,20 +29,72 @@ export async function fetchLessonsFromSupabase(): Promise<Lesson[] | null> {
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.warn('Supabase fetch notice, using LocalStorage:', error.message);
-      return null;
+      console.error('Supabase fetch error:', error.message);
+      return [];
     }
-    return data as Lesson[];
+    return (data as Lesson[]) || [];
   } catch (err) {
-    console.warn('Supabase request error:', err);
-    return null;
+    console.error('Supabase request exception:', err);
+    return [];
   }
 }
 
 /**
- * Save / Upsert lessons array to Supabase
+ * Upsert / Save a single lesson into Supabase
  */
-export async function saveLessonsToSupabase(lessons: Lesson[]): Promise<boolean> {
+export async function saveLessonToSupabase(lesson: Lesson): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const record = {
+      lesson_id: lesson.lesson_id,
+      title: lesson.title,
+      description: lesson.description,
+      category: lesson.category || 'General',
+      games: lesson.games,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('lessons')
+      .upsert(record, { onConflict: 'lesson_id' });
+
+    if (error) {
+      console.error('Supabase upsert error:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase save exception:', err);
+    return false;
+  }
+}
+
+/**
+ * Delete a lesson from Supabase
+ */
+export async function deleteLessonFromSupabase(lesson_id: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('lessons')
+      .delete()
+      .eq('lesson_id', lesson_id);
+
+    if (error) {
+      console.error('Supabase delete error:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase delete exception:', err);
+    return false;
+  }
+}
+
+/**
+ * Save full array of lessons to Supabase
+ */
+export async function saveAllLessonsToSupabase(lessons: Lesson[]): Promise<boolean> {
   if (!supabase) return false;
   try {
     const records = lessons.map((l) => ({
@@ -54,17 +106,17 @@ export async function saveLessonsToSupabase(lessons: Lesson[]): Promise<boolean>
       updated_at: new Date().toISOString(),
     }));
 
-    const { error } = await supabase.from('lessons').upsert(records, {
-      onConflict: 'lesson_id',
-    });
+    const { error } = await supabase
+      .from('lessons')
+      .upsert(records, { onConflict: 'lesson_id' });
 
     if (error) {
-      console.warn('Supabase upsert warning:', error.message);
+      console.error('Supabase bulk upsert error:', error.message);
       return false;
     }
     return true;
   } catch (err) {
-    console.warn('Supabase save error:', err);
+    console.error('Supabase bulk save exception:', err);
     return false;
   }
 }
