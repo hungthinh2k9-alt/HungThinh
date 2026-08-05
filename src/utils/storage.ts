@@ -1,4 +1,5 @@
 import type { Lesson, StudentProgress } from '../types/lesson';
+import { saveLessonsToSupabase } from './supabase';
 
 const LESSONS_STORAGE_KEY = 'antigravity_english_lessons';
 const PROGRESS_STORAGE_KEY = 'antigravity_english_progress';
@@ -128,6 +129,7 @@ export function getStoredLessons(): Lesson[] {
     const data = localStorage.getItem(LESSONS_STORAGE_KEY);
     if (!data) {
       localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(INITIAL_LESSONS));
+      saveLessonsToSupabase(INITIAL_LESSONS);
       return INITIAL_LESSONS;
     }
     return JSON.parse(data);
@@ -140,6 +142,7 @@ export function getStoredLessons(): Lesson[] {
 export function saveStoredLessons(lessons: Lesson[]): void {
   try {
     localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
+    saveLessonsToSupabase(lessons);
   } catch (err) {
     console.error('Failed to save lessons to localStorage', err);
   }
@@ -186,5 +189,6 @@ export function saveStudentLessonProgress(
 
 export function resetAllStorage(): void {
   localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(INITIAL_LESSONS));
+  saveLessonsToSupabase(INITIAL_LESSONS);
   localStorage.removeItem(PROGRESS_STORAGE_KEY);
 }

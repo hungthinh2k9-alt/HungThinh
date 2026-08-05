@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Lesson } from './types/lesson';
-import { getStoredLessons } from './utils/storage';
+import { getStoredLessons, saveStoredLessons } from './utils/storage';
+import { fetchLessonsFromSupabase } from './utils/supabase';
 import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
@@ -12,12 +13,23 @@ export function App() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
-    const loadedLessons = getStoredLessons();
-    setLessons(loadedLessons);
+    async function loadData() {
+      const localData = getStoredLessons();
+      setLessons(localData);
+
+      // Attempt to load live remote data from Supabase
+      const remoteData = await fetchLessonsFromSupabase();
+      if (remoteData && remoteData.length > 0) {
+        setLessons(remoteData);
+        saveStoredLessons(remoteData);
+      }
+    }
+    loadData();
   }, []);
 
   const handleLessonsUpdated = (updatedLessons: Lesson[]) => {
     setLessons(updatedLessons);
+    saveStoredLessons(updatedLessons);
   };
 
   const handleSelectLesson = (lesson: Lesson) => {
@@ -89,7 +101,7 @@ export function App() {
       </main>
 
       <footer className="app-footer">
-        <p>100% Data-Driven Interactive Text-Only Learning Platform • Built with React & Vite</p>
+        <p>100% Data-Driven Interactive Text-Only Learning Platform • Built with React & Vite & Supabase</p>
       </footer>
     </div>
   );
