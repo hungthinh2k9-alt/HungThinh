@@ -95,7 +95,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
                 disabled={submitted}
                 placeholder={'_'.repeat(targetLen)}
                 maxLength={targetLen + 5}
-                className={`cloze-input ${
+                className={`cloze-underline-input ${
                   isBlankCorrect ? 'correct' : isBlankError ? 'incorrect' : ''
                 }`}
                 style={{ width: `${Math.max(targetLen * 14 + 20, 60)}px` }}

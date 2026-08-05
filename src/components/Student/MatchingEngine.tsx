@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Game, MatchingPair } from '../../types/lesson';
 import { parseMatchingItems, shuffleArray } from '../../utils/parsers';
 import { CheckCircle2 } from 'lucide-react';
@@ -7,6 +7,18 @@ interface MatchingEngineProps {
   game: Game;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface ConnectionLine {
+  id: string;
+  from: Point;
+  to: Point;
+  status: 'matched' | 'mismatched' | 'active';
 }
 
 export const MatchingEngine: React.FC<MatchingEngineProps> = ({
@@ -24,6 +36,10 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   const [mismatchedRight, setMismatchedRight] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [lines, setLines] = useState<ConnectionLine[]>([]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
     const parsedPairs = parseMatchingItems(game.items);
@@ -35,7 +51,69 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     setMatchedIds([]);
     setAttempts(0);
     setIsFinished(false);
+    setLines([]);
   }, [game]);
+
+  // Recalculate SVG lines whenever selections or matches update
+  const updateLines = () => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newLines: ConnectionLine[] = [];
+
+    // Matched lines
+    matchedIds.forEach((id) => {
+      const leftEl = cardRefs.current[`left-${id}`];
+      const rightEl = cardRefs.current[`right-${id}`];
+      if (leftEl && rightEl) {
+        const lRect = leftEl.getBoundingClientRect();
+        const rRect = rightEl.getBoundingClientRect();
+
+        newLines.push({
+          id: `line-${id}`,
+          from: {
+            x: lRect.right - containerRect.left,
+            y: lRect.top + lRect.height / 2 - containerRect.top,
+          },
+          to: {
+            x: rRect.left - containerRect.left,
+            y: rRect.top + rRect.height / 2 - containerRect.top,
+          },
+          status: 'matched',
+        });
+      }
+    });
+
+    // Mismatched temporary line
+    if (mismatchedLeft && mismatchedRight) {
+      const leftEl = cardRefs.current[`left-${mismatchedLeft}`];
+      const rightEl = cardRefs.current[`right-${mismatchedRight}`];
+      if (leftEl && rightEl) {
+        const lRect = leftEl.getBoundingClientRect();
+        const rRect = rightEl.getBoundingClientRect();
+
+        newLines.push({
+          id: 'line-mismatch',
+          from: {
+            x: lRect.right - containerRect.left,
+            y: lRect.top + lRect.height / 2 - containerRect.top,
+          },
+          to: {
+            x: rRect.left - containerRect.left,
+            y: rRect.top + rRect.height / 2 - containerRect.top,
+          },
+          status: 'mismatched',
+        });
+      }
+    }
+
+    setLines(newLines);
+  };
+
+  useEffect(() => {
+    updateLines();
+    window.addEventListener('resize', updateLines);
+    return () => window.removeEventListener('resize', updateLines);
+  }, [matchedIds, mismatchedLeft, mismatchedRight, selectedLeft, selectedRight]);
 
   const handleLeftClick = (pairId: string) => {
     if (matchedIds.includes(pairId) || mismatch || isFinished) return;
@@ -56,7 +134,6 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   const checkMatch = (leftId: string, rightId: string) => {
     setAttempts((prev) => prev + 1);
     if (leftId === rightId) {
-      // Match found!
       const newMatched = [...matchedIds, leftId];
       setMatchedIds(newMatched);
       setSelectedLeft(null);
@@ -68,7 +145,6 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
         onItemCompleted(cleanSuccess);
       }
     } else {
-      // Mismatch!
       setMismatch(true);
       setMismatchedLeft(leftId);
       setMismatchedRight(rightId);
@@ -82,74 +158,92 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     }
   };
 
-  const handleNext = () => {
-    onGameFinished();
-  };
-
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Matching Exercise</span>
+        <span className="step-badge">Matching Pairs</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
-      <div className="matching-grid">
-        {/* Left Column */}
-        <div className="matching-column">
-          <div className="column-header">Terms</div>
-          {pairs.map((p) => {
-            const isMatched = matchedIds.includes(p.id);
-            const isSelected = selectedLeft === p.id;
-            const isMismatched = mismatchedLeft === p.id;
+      <div className="matching-wrapper-relative mt-4" ref={containerRef}>
+        {/* SVG Connection Lines Overlay */}
+        <svg className="matching-svg-layer">
+          {lines.map((line) => {
+            const dx = Math.abs(line.to.x - line.from.x) * 0.5;
+            const pathD = `M ${line.from.x} ${line.from.y} C ${line.from.x + dx} ${line.from.y}, ${line.to.x - dx} ${line.to.y}, ${line.to.x} ${line.to.y}`;
 
             return (
-              <button
-                key={`left-${p.id}`}
-                onClick={() => handleLeftClick(p.id)}
-                disabled={isMatched || isFinished}
-                className={`matching-card ${
-                  isMatched
-                    ? 'matched'
-                    : isMismatched
-                    ? 'mismatched shake'
-                    : isSelected
-                    ? 'selected'
-                    : ''
-                }`}
-              >
-                {p.left}
-              </button>
+              <path
+                key={line.id}
+                d={pathD}
+                className={`connection-rope ${line.status}`}
+              />
             );
           })}
-        </div>
+        </svg>
 
-        {/* Right Column */}
-        <div className="matching-column">
-          <div className="column-header">Meanings</div>
-          {rightItems.map((r) => {
-            const isMatched = matchedIds.includes(r.id);
-            const isSelected = selectedRight === r.id;
-            const isMismatched = mismatchedRight === r.id;
+        <div className="matching-grid compact">
+          {/* Left Column */}
+          <div className="matching-column">
+            <div className="column-header">English Terms</div>
+            {pairs.map((p) => {
+              const isMatched = matchedIds.includes(p.id);
+              const isSelected = selectedLeft === p.id;
+              const isMismatched = mismatchedLeft === p.id;
 
-            return (
-              <button
-                key={`right-${r.id}`}
-                onClick={() => handleRightClick(r.id)}
-                disabled={isMatched || isFinished}
-                className={`matching-card ${
-                  isMatched
-                    ? 'matched'
-                    : isMismatched
-                    ? 'mismatched shake'
-                    : isSelected
-                    ? 'selected'
-                    : ''
-                }`}
-              >
-                {r.text}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={`left-${p.id}`}
+                  ref={(el) => { cardRefs.current[`left-${p.id}`] = el; }}
+                  onClick={() => handleLeftClick(p.id)}
+                  disabled={isMatched || isFinished}
+                  className={`matching-card compact ${
+                    isMatched
+                      ? 'matched'
+                      : isMismatched
+                      ? 'mismatched shake'
+                      : isSelected
+                      ? 'selected'
+                      : ''
+                  }`}
+                >
+                  <span className="card-dot left" />
+                  {p.left}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Column */}
+          <div className="matching-column">
+            <div className="column-header">Vietnamese Meanings</div>
+            {rightItems.map((r) => {
+              const isMatched = matchedIds.includes(r.id);
+              const isSelected = selectedRight === r.id;
+              const isMismatched = mismatchedRight === r.id;
+
+              return (
+                <button
+                  key={`right-${r.id}`}
+                  ref={(el) => { cardRefs.current[`right-${r.id}`] = el; }}
+                  onClick={() => handleRightClick(r.id)}
+                  disabled={isMatched || isFinished}
+                  className={`matching-card compact ${
+                    isMatched
+                      ? 'matched'
+                      : isMismatched
+                      ? 'mismatched shake'
+                      : isSelected
+                      ? 'selected'
+                      : ''
+                  }`}
+                >
+                  <span className="card-dot right" />
+                  {r.text}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -158,7 +252,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">All pairs matched!</p>
+              <p className="feedback-title">All pairs connected successfully!</p>
               <p className="feedback-detail">Total attempts: {attempts}</p>
             </div>
           </div>
@@ -167,7 +261,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
 
       <div className="game-actions mt-4">
         {isFinished && (
-          <button className="btn-primary" onClick={handleNext}>
+          <button className="btn-primary" onClick={onGameFinished}>
             Continue →
           </button>
         )}
