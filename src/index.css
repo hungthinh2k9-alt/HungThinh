@@ -265,128 +265,14 @@ input, textarea, select {
 .game-container-layout {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-/* Side-by-Side 2-Card Grid Layout (Desktop: Left Stats Card, Right Question List Card) */
-.game-stats-palette-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
-  align-items: start;
 }
 
-@media (max-width: 768px) {
-  .game-stats-palette-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-.stats-board-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 1.1rem;
+/* Layout Row 1: Top Header Bar & Burning Timer */
+.layout-row-1 {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-}
-
-.stats-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.stats-metrics-row {
-  display: flex;
   gap: 0.75rem;
-}
-
-.metric-box {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background: #f8fafc;
-  border: 1px solid var(--border-color);
-}
-
-.metric-box.score {
-  background: #eef2ff;
-  border-color: #c7d2fe;
-}
-
-.metric-box.streak {
-  background: #fff7ed;
-  border-color: #fed7aa;
-}
-
-.metric-icon.gold {
-  color: #f59e0b;
-}
-
-.metric-icon.orange {
-  color: #ea580c;
-}
-
-.metric-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.metric-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.metric-value {
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text-main);
-}
-
-.countdown-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.countdown-text-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.countdown-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.jump-wrong-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  width: 100%;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  font-weight: 700;
-  font-size: 0.82rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.15s ease;
-}
-
-.jump-wrong-btn:hover {
-  background: #fee2e2;
-  transform: translateY(-1px);
 }
 
 .game-top-bar {
@@ -430,69 +316,7 @@ input, textarea, select {
   font-weight: 500;
 }
 
-.game-top-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.score-display {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-  border: 1px solid #c7d2fe;
-  border-radius: 24px;
-  padding: 0.35rem 0.85rem;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1rem;
-  color: var(--accent-primary);
-}
-
-.score-icon {
-  color: #f59e0b;
-}
-
-.score-value {
-  letter-spacing: -0.5px;
-}
-
-.streak-display {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  border-radius: 24px;
-  padding: 0.3rem 0.7rem;
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #ea580c;
-}
-
-.icon-flame {
-  color: #f97316;
-}
-
-.mistakes-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 24px;
-  padding: 0.3rem 0.7rem;
-  font-weight: 700;
-  font-size: 0.78rem;
-  color: #dc2626;
-}
-
-/* ==========================================
-   COUNTDOWN TIMER BAR
-   ========================================== */
-
+/* Vivid Burning Fire Countdown Timer Bar */
 .countdown-bar-container {
   display: flex;
   align-items: center;
@@ -502,6 +326,18 @@ input, textarea, select {
   border-radius: var(--radius-md);
   padding: 0.6rem 1rem;
   box-shadow: var(--shadow-sm);
+}
+
+.burning-fire-container {
+  background: #0f172a;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.15);
+}
+
+.burning-fire-container .countdown-time {
+  color: #fbbf24;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 .countdown-label {
@@ -527,8 +363,8 @@ input, textarea, select {
 
 .countdown-track {
   flex: 1;
-  height: 8px;
-  background: #e2e8f0;
+  height: 10px;
+  background: #1e293b;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -540,8 +376,114 @@ input, textarea, select {
   transition: width 1s linear;
 }
 
+.burning-flame-fill {
+  background: linear-gradient(90deg, #f59e0b, #f97316, #ef4444, #f59e0b);
+  background-size: 250% 100%;
+  animation: burningFlame 1.8s linear infinite;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.8), 0 0 18px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes burningFlame {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .countdown-fill.low {
   background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+/* Layout Row 2: 3-Column Desktop Grid Layout */
+.layout-row-2-grid {
+  display: grid;
+  grid-template-columns: 230px 1fr 240px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.desktop-col-left, .desktop-col-right {
+  position: sticky;
+  top: 80px;
+}
+
+@media (max-width: 992px) {
+  .layout-row-2-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .desktop-col-left, .desktop-col-right {
+    position: static;
+  }
+
+  .desktop-col-left {
+    order: 2;
+  }
+
+  .desktop-col-middle {
+    order: 1;
+  }
+
+  .desktop-col-right {
+    order: 3;
+  }
+}
+
+/* Achievements Card (Col 1) */
+.achievements-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-vertical-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-card-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  text-align: left;
+}
+
+.stat-card-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.stat-card-value {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.mistake-jump-card {
+  cursor: pointer;
+  background: #fef2f2;
+  border-color: #fecaca;
+  transition: transform 0.15s ease;
+}
+
+.mistake-jump-card:hover {
+  transform: translateY(-2px);
+  background: #fee2e2;
 }
 
 /* ==========================================
