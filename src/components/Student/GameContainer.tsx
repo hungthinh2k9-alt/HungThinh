@@ -230,11 +230,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             </button>
             <div className="header-info">
               <h2 className="lesson-header-title">{lesson.title}</h2>
-              <span className="game-type-badge">
-                {lang === 'vi' 
-                  ? `Câu ${currentQ.questionNumber} / ${flatQuestions.length}` 
-                  : `Question ${currentQ.questionNumber} of ${flatQuestions.length}`}
-              </span>
             </div>
           </div>
 
@@ -390,9 +385,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           </div>
         </div>
 
-        {/* Right Column (Placed ABOVE game engine on Mobile): Question List Card with surrounding Green Progress Bar */}
+        {/* Right Column: Question List Card */}
         <div className="palette-sidebar-card shadow-sm">
-          {/* Green Overall Progress Bar surrounding Question List */}
+          {/* Green Overall Progress Bar embedded inside Question List Card (Mobile Only) */}
           <div className="progress-bar-track card-embedded-progress mb-2">
             <div
               className="progress-bar-fill"

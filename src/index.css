@@ -467,7 +467,8 @@ input, textarea, select {
   }
 
   .mobile-stat-pill,
-  .mobile-mistake-jump-btn {
+  .mobile-mistake-jump-btn,
+  .progress-bar-track.card-embedded-progress {
     display: none !important;
   }
 }

@@ -94,9 +94,6 @@ export const MistakesReview: React.FC<MistakesReviewProps> = ({
 
         <div className="header-info">
           <h2 className="lesson-header-title">{t.reviewMistakes}</h2>
-          <span className="game-type-badge">
-            {remainingQuestions.length} {lang === 'vi' ? 'câu hỏi cần làm lại' : 'questions remaining'}
-          </span>
         </div>
 
         <button className="btn-secondary-small" onClick={onClearMistakes}>
