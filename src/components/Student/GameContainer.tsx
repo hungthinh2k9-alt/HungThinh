@@ -32,7 +32,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [totalQuestionsAnswered, setTotalQuestionsAnswered] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [startTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [missedQuestions, setMissedQuestions] = useState<MissedQuestion[]>([]);
   const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
@@ -114,6 +114,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         lang={lang}
         onBack={() => setIsReviewingMistakes(false)}
         onClearMistakes={() => setMissedQuestions([])}
+        onBackToDashboard={onBackToDashboard}
       />
     );
   }
@@ -128,6 +129,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         correctAnswers={correctAnswersCount}
         timeSeconds={elapsedSeconds}
         onRestart={() => {
+          setStartTime(Date.now());
+          setElapsedSeconds(0);
+          setMissedQuestions([]);
           setCurrentGameIndex(0);
           setStreak(0);
           setMaxStreak(0);

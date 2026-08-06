@@ -7,13 +7,14 @@ import { MatchingEngine } from './MatchingEngine';
 import { SentenceBuilderEngine } from './SentenceBuilderEngine';
 import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
-import { ArrowLeft, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle2, Home } from 'lucide-react';
 
 interface MistakesReviewProps {
   missedQuestions: MissedQuestion[];
   lang: Language;
   onBack: () => void;
   onClearMistakes: () => void;
+  onBackToDashboard: () => void;
 }
 
 export const MistakesReview: React.FC<MistakesReviewProps> = ({
@@ -21,9 +22,11 @@ export const MistakesReview: React.FC<MistakesReviewProps> = ({
   lang,
   onBack,
   onClearMistakes,
+  onBackToDashboard,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState<boolean>(false);
   const t = translations[lang];
 
   const remainingQuestions = missedQuestions.filter((q) => !resolvedIds.includes(q.id));
@@ -40,16 +43,20 @@ export const MistakesReview: React.FC<MistakesReviewProps> = ({
             {lang === 'vi' ? 'Bạn đã làm lại thành công tất cả các câu hỏi bị sai!' : 'You have successfully resolved all missed questions!'}
           </p>
         </div>
-        <div className="summary-actions mt-6">
+        <div className="summary-actions mt-6 flex justify-center gap-3">
           <button className="btn-primary" onClick={() => { onClearMistakes(); onBack(); }}>
-            <ArrowLeft size={18} /> {t.backToTopics}
+            <ArrowLeft size={18} /> {lang === 'vi' ? 'Trở lại bài học' : 'Back to Lesson'}
+          </button>
+          <button className="btn-secondary" onClick={() => { onClearMistakes(); onBackToDashboard(); }}>
+            <Home size={18} /> {t.backToTopics}
           </button>
         </div>
       </div>
     );
   }
 
-  const currentQ = remainingQuestions[Math.min(currentIndex, remainingQuestions.length - 1)];
+  const safeIndex = Math.min(currentIndex, remainingQuestions.length - 1);
+  const currentQ = remainingQuestions[safeIndex];
 
   const tempGame = {
     id: currentQ.id,
@@ -59,16 +66,22 @@ export const MistakesReview: React.FC<MistakesReviewProps> = ({
   };
 
   const handleCompleted = (isCorrect: boolean) => {
+    setLastAnswerCorrect(isCorrect);
     if (isCorrect) {
       setResolvedIds((prev) => [...prev, currentQ.id]);
     }
   };
 
   const handleNext = () => {
-    if (currentIndex < remainingQuestions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
+    if (!lastAnswerCorrect) {
+      // If student got it wrong, move to next question in remaining
+      setCurrentIndex((prev) => (prev + 1) % remainingQuestions.length);
     } else {
-      setCurrentIndex(0);
+      // If student resolved it, remaining Questions shrinks by 1. Keep currentIndex within bounds.
+      const newRemainingCount = remainingQuestions.length - 1;
+      if (newRemainingCount > 0) {
+        setCurrentIndex((prev) => prev % newRemainingCount);
+      }
     }
   };
 
