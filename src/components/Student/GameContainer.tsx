@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Lesson, Game, MissedQuestion } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
@@ -34,18 +34,21 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onBackToDashboard,
 }) => {
   // Flatten all items across all games into a sequential questions list (1 to N)
-  const flatQuestions: QuestionRef[] = [];
-  lesson.games.forEach((g, gIdx) => {
-    g.items.forEach((item, iIdx) => {
-      flatQuestions.push({
-        questionNumber: flatQuestions.length + 1,
-        gameIndex: gIdx,
-        itemIndex: iIdx,
-        game: g,
-        rawItem: item,
+  const flatQuestions: QuestionRef[] = useMemo(() => {
+    const list: QuestionRef[] = [];
+    lesson.games.forEach((g, gIdx) => {
+      g.items.forEach((item, iIdx) => {
+        list.push({
+          questionNumber: list.length + 1,
+          gameIndex: gIdx,
+          itemIndex: iIdx,
+          game: g,
+          rawItem: item,
+        });
       });
     });
-  });
+    return list;
+  }, [lesson.games]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'correct' | 'incorrect'>>({});
@@ -75,13 +78,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const currentQ = flatQuestions[safeIndex] || flatQuestions[0];
   const currentGame = currentQ.game;
 
-  // Single-item game for current question
-  const singleItemGame: Game = {
+  // Single-item game for current question - memoized to prevent re-render resets on timer tick
+  const singleItemGame: Game = useMemo(() => ({
     id: `${currentGame.id}-q${currentQ.questionNumber}`,
     type: currentGame.type,
     instruction: currentGame.instruction,
     items: [currentQ.rawItem],
-  };
+  }), [currentGame.id, currentGame.type, currentGame.instruction, currentQ.questionNumber, currentQ.rawItem]);
 
   // Countdown timer
   const remainingSeconds = Math.max(0, COUNTDOWN_TOTAL_SECONDS - elapsedSeconds);

@@ -34,7 +34,7 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
     setConstructedBlocks([]);
     setSubmitted(false);
     setIsCorrect(false);
-  }, [currentIndex, game]);
+  }, [game.id]);
 
   const handleBankBlockClick = (block: { id: string; text: string }) => {
     if (submitted) return;

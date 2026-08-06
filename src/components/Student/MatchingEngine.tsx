@@ -52,7 +52,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     setAttempts(0);
     setIsFinished(false);
     setLines([]);
-  }, [game]);
+  }, [game.id]);
 
   const updateLines = () => {
     if (!containerRef.current) return;

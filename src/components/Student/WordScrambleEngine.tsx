@@ -41,7 +41,7 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setShowHint(false);
     setSubmitted(false);
     setIsCorrect(false);
-  }, [currentIndex, game]);
+  }, [game.id]);
 
   const handleCheck = useCallback(() => {
     if (submitted || bankTiles.length > 0) return;
