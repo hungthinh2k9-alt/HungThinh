@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Game, MatchingPair } from '../../types/lesson';
 import { parseMatchingItems, shuffleArray } from '../../utils/parsers';
 import { CheckCircle2 } from 'lucide-react';
-import type { Language } from '../../utils/i18n';
-import { translations } from '../../utils/i18n';
 
 interface MatchingEngineProps {
   game: Game;
-  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
 }
@@ -26,11 +23,9 @@ interface ConnectionLine {
 
 export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   game,
-  lang,
   onItemCompleted,
   onGameFinished,
 }) => {
-  const t = translations[lang];
   const [pairs, setPairs] = useState<MatchingPair[]>([]);
   const [rightItems, setRightItems] = useState<{ id: string; text: string }[]>([]);
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
@@ -59,13 +54,11 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     setLines([]);
   }, [game]);
 
-  // Recalculate SVG lines whenever selections or matches update
-  const updateLines = useCallback(() => {
+  const updateLines = () => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const newLines: ConnectionLine[] = [];
 
-    // Matched lines
     matchedIds.forEach((id) => {
       const leftEl = cardRefs.current[`left-${id}`];
       const rightEl = cardRefs.current[`right-${id}`];
@@ -88,7 +81,6 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
       }
     });
 
-    // Mismatched temporary line
     if (mismatchedLeft && mismatchedRight) {
       const leftEl = cardRefs.current[`left-${mismatchedLeft}`];
       const rightEl = cardRefs.current[`right-${mismatchedRight}`];
@@ -112,13 +104,13 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     }
 
     setLines(newLines);
-  }, [matchedIds, mismatchedLeft, mismatchedRight]);
+  };
 
   useEffect(() => {
     updateLines();
     window.addEventListener('resize', updateLines);
     return () => window.removeEventListener('resize', updateLines);
-  }, [updateLines]);
+  }, [matchedIds, mismatchedLeft, mismatchedRight, selectedLeft, selectedRight]);
 
   const handleLeftClick = (pairId: string) => {
     if (matchedIds.includes(pairId) || mismatch || isFinished) return;
@@ -146,7 +138,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
 
       if (newMatched.length === pairs.length) {
         setIsFinished(true);
-        const cleanSuccess = attempts + 1 === pairs.length;
+        const cleanSuccess = attempts <= pairs.length;
         onItemCompleted(cleanSuccess);
       }
     } else {
@@ -166,15 +158,15 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">{t.matchingTitle}</span>
+        <span className="step-badge">Matching Pairs</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
       <div className="matching-wrapper-relative mt-4" ref={containerRef}>
-        {/* SVG Connection Lines Overlay */}
+        {/* SVG Connection Lines */}
         <svg className="matching-svg-layer">
           {lines.map((line) => {
-            const dx = Math.abs(line.to.x - line.from.x) * 0.5;
+            const dx = Math.abs(line.to.x - line.from.x) * 0.4;
             const pathD = `M ${line.from.x} ${line.from.y} C ${line.from.x + dx} ${line.from.y}, ${line.to.x - dx} ${line.to.y}, ${line.to.x} ${line.to.y}`;
 
             return (
@@ -187,10 +179,11 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           })}
         </svg>
 
-        <div className="matching-grid compact">
-          {/* Left Column */}
-          <div className="matching-column">
-            <div className="column-header">{t.terms}</div>
+        {/* Forced 50/50 Side-by-Side Dual Columns */}
+        <div className="matching-grid compact side-by-side-50">
+          {/* Left Column (50% English) */}
+          <div className="matching-column col-half">
+            <div className="column-header">English</div>
             {pairs.map((p) => {
               const isMatched = matchedIds.includes(p.id);
               const isSelected = selectedLeft === p.id;
@@ -213,15 +206,15 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
                   }`}
                 >
                   <span className="card-dot left" />
-                  {p.left}
+                  <span className="card-text">{p.left}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Right Column */}
-          <div className="matching-column">
-            <div className="column-header">{t.meanings}</div>
+          {/* Right Column (50% Vietnamese) */}
+          <div className="matching-column col-half">
+            <div className="column-header">Tiếng Việt</div>
             {rightItems.map((r) => {
               const isMatched = matchedIds.includes(r.id);
               const isSelected = selectedRight === r.id;
@@ -244,7 +237,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
                   }`}
                 >
                   <span className="card-dot right" />
-                  {r.text}
+                  <span className="card-text">{r.text}</span>
                 </button>
               );
             })}
@@ -257,8 +250,8 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">{t.allPairsMatched}</p>
-              <p className="feedback-detail">{t.totalAttempts} {attempts}</p>
+              <p className="feedback-title">All pairs connected successfully!</p>
+              <p className="feedback-detail">Total attempts: {attempts}</p>
             </div>
           </div>
         </div>
@@ -267,7 +260,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
       <div className="game-actions mt-4">
         {isFinished && (
           <button className="btn-primary" onClick={onGameFinished}>
-            {t.continue}
+            Continue →
           </button>
         )}
       </div>

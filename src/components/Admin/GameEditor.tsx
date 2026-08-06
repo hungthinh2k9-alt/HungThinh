@@ -247,7 +247,6 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               {game.type === 'cloze' && (
                 <ClozeEngine
                   game={game}
-                  lang="vi"
                   onItemCompleted={() => {}}
                   onGameFinished={() => setShowPreview(false)}
                 />
@@ -255,7 +254,6 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               {game.type === 'matching' && (
                 <MatchingEngine
                   game={game}
-                  lang="vi"
                   onItemCompleted={() => {}}
                   onGameFinished={() => setShowPreview(false)}
                 />
@@ -263,7 +261,6 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               {game.type === 'sentence_builder' && (
                 <SentenceBuilderEngine
                   game={game}
-                  lang="vi"
                   onItemCompleted={() => {}}
                   onGameFinished={() => setShowPreview(false)}
                 />
@@ -271,7 +268,6 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               {game.type === 'error_spotter' && (
                 <ErrorSpotterEngine
                   game={game}
-                  lang="vi"
                   onItemCompleted={() => {}}
                   onGameFinished={() => setShowPreview(false)}
                 />
@@ -279,7 +275,6 @@ export const GameEditor: React.FC<GameEditorProps> = ({
               {game.type === 'word_scramble' && (
                 <WordScrambleEngine
                   game={game}
-                  lang="vi"
                   onItemCompleted={() => {}}
                   onGameFinished={() => setShowPreview(false)}
                 />

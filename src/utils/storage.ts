@@ -13,22 +13,18 @@ export function getStoredLessons(): Lesson[] {
     const data = localStorage.getItem(LESSONS_STORAGE_KEY);
     if (!data) return [];
     return JSON.parse(data);
-  } catch {
+  } catch (err) {
     return [];
   }
 }
 
 export function saveStoredLessons(lessons: Lesson[]): void {
   try {
-    cacheStoredLessons(lessons);
+    localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
     saveAllLessonsToSupabase(lessons);
   } catch (err) {
     console.error('Failed to save lessons', err);
   }
-}
-
-export function cacheStoredLessons(lessons: Lesson[]): void {
-  localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
 }
 
 export function saveSingleStoredLesson(lesson: Lesson): void {
@@ -65,7 +61,7 @@ export function getStoredProgress(): StudentProgress {
     const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
     if (!data) return { completedLessons: {} };
     return JSON.parse(data);
-  } catch {
+  } catch (err) {
     return { completedLessons: {} };
   }
 }
@@ -74,17 +70,24 @@ export function saveStudentLessonProgress(
   lessonId: string,
   score: number,
   totalGames: number,
-  timeSeconds: number
+  timeSeconds: number,
+  accuracyPercent: number = 100
 ): void {
   const current = getStoredProgress();
   const existing = current.completedLessons[lessonId];
   const newHighScore = Math.max(existing?.highScore || 0, score);
+  
+  // Calculate 1 to 10 star rating based on accuracy
+  const starsCount = Math.min(10, Math.max(1, Math.round((accuracyPercent / 100) * 10)));
+  const newStars = Math.max(existing?.stars || 0, starsCount);
+
   const bestTime = existing
     ? Math.min(existing.bestTimeSeconds, timeSeconds)
     : timeSeconds;
 
   current.completedLessons[lessonId] = {
     highScore: newHighScore,
+    stars: newStars,
     totalGames,
     bestTimeSeconds: bestTime,
     completedAt: new Date().toISOString(),

@@ -2,23 +2,20 @@ import React, { useState, useEffect } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseSentenceBuilderItem } from '../../utils/parsers';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
-import type { Language } from '../../utils/i18n';
-import { translations } from '../../utils/i18n';
 
 interface SentenceBuilderEngineProps {
   game: Game;
-  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
+  onRecordMistake?: (rawItem: string) => void;
 }
 
 export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
   game,
-  lang,
   onItemCompleted,
   onGameFinished,
+  onRecordMistake,
 }) => {
-  const t = translations[lang];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bankBlocks, setBankBlocks] = useState<{ id: string; text: string }[]>([]);
   const [constructedBlocks, setConstructedBlocks] = useState<{ id: string; text: string }[]>([]);
@@ -29,8 +26,7 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
   const parsed = parseSentenceBuilderItem(currentRawItem, `sb-${currentIndex}`);
 
   useEffect(() => {
-    const nextParsed = parseSentenceBuilderItem(game.items[currentIndex], `sb-${currentIndex}`);
-    const blocksWithId = nextParsed.shuffledBlocks.map((b, idx) => ({
+    const blocksWithId = parsed.shuffledBlocks.map((b, idx) => ({
       id: `block-${idx}-${Date.now()}`,
       text: b,
     }));
@@ -67,6 +63,10 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
     setSubmitted(true);
     setIsCorrect(matched);
     onItemCompleted(matched);
+
+    if (!matched && onRecordMistake) {
+      onRecordMistake(currentRawItem);
+    }
   };
 
   const handleNext = () => {
@@ -80,16 +80,15 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">{t.question} {currentIndex + 1}/{game.items.length}</span>
+        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
-      {/* Target drop zone / sentence line */}
       <div className="drop-zone-container">
-        <div className="drop-zone-label">{t.yourSentence}</div>
+        <div className="drop-zone-label">Your Sentence:</div>
         <div className={`drop-zone ${constructedBlocks.length === 0 ? 'empty' : ''}`}>
           {constructedBlocks.length === 0 ? (
-            <span className="placeholder-text">{t.clickBlocks}</span>
+            <span className="placeholder-text">Click blocks below to form the sentence</span>
           ) : (
             constructedBlocks.map((b) => (
               <button
@@ -105,13 +104,12 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
         </div>
       </div>
 
-      {/* Word bank */}
       <div className="word-bank-container mt-4">
         <div className="bank-header">
-          <span>{t.availableBlocks}</span>
+          <span>Available Blocks:</span>
           {constructedBlocks.length > 0 && !submitted && (
             <button className="btn-text" onClick={handleReset}>
-              <RotateCcw size={14} /> {t.clearAll}
+              <RotateCcw size={14} /> Clear All
             </button>
           )}
         </div>
@@ -134,10 +132,13 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">{isCorrect ? t.perfectArrangement : t.incorrectOrder}</p>
-              {!isCorrect && (
-                <p className="feedback-detail">
-                  {t.correctSentence} <strong>{parsed.correctBlocks.join(' ')}</strong>
+              <p className="feedback-title">{isCorrect ? 'Perfect arrangement!' : 'Incorrect order!'}</p>
+              <p className="feedback-detail">
+                Correct sequence: <strong>{parsed.correctBlocks.join(' ')}</strong>
+              </p>
+              {parsed.translation && (
+                <p className="feedback-translation mt-1">
+                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -152,11 +153,11 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
             onClick={handleCheck}
             disabled={bankBlocks.length > 0 && constructedBlocks.length === 0}
           >
-            {t.checkAnswer}
+            Check Sentence
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? t.nextQuestion : t.finishSection}
+            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
           </button>
         )}
       </div>

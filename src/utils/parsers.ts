@@ -21,11 +21,17 @@ export function shuffleArray<T>(array: T[]): T[] {
 
 /**
  * Parse Cloze Test item string
- * Examples:
- * - "She is feeling very [happy|vui vẻ] today." -> Full word mask with hint "vui vẻ"
- * - "They h[av]e breakfast at 7 AM." -> Partial character mask inside word "have"
  */
 export function parseClozeItem(rawString: string, itemId: string): ParsedClozeItem {
+  let mainText = rawString;
+  let translation: string | undefined;
+
+  if (rawString.includes('=>')) {
+    const parts = rawString.split('=>');
+    mainText = parts[0].trim();
+    translation = parts[1].trim();
+  }
+
   const segments: ClozeSegment[] = [];
   const regex = /\[([^\]]+)\]/g;
   let lastIndex = 0;
@@ -33,10 +39,9 @@ export function parseClozeItem(rawString: string, itemId: string): ParsedClozeIt
   let blankCounter = 0;
   let fullSentenceText = '';
 
-  while ((match = regex.exec(rawString)) !== null) {
-    // Text before bracket
+  while ((match = regex.exec(mainText)) !== null) {
     if (match.index > lastIndex) {
-      const textChunk = rawString.slice(lastIndex, match.index);
+      const textChunk = mainText.slice(lastIndex, match.index);
       segments.push({ type: 'text', content: textChunk });
       fullSentenceText += textChunk;
     }
@@ -46,7 +51,6 @@ export function parseClozeItem(rawString: string, itemId: string): ParsedClozeIt
     const blankId = `${itemId}-b${blankCounter}`;
 
     if (insideBracket.includes('|')) {
-      // Case A: [target|hint]
       const [target, hint] = insideBracket.split('|').map((s) => s.trim());
       segments.push({
         type: 'blank',
@@ -57,7 +61,6 @@ export function parseClozeItem(rawString: string, itemId: string): ParsedClozeIt
       });
       fullSentenceText += target;
     } else {
-      // Case B: partial word mask like h[av]e or full word [target]
       const target = insideBracket;
       segments.push({
         type: 'blank',
@@ -71,8 +74,8 @@ export function parseClozeItem(rawString: string, itemId: string): ParsedClozeIt
     lastIndex = regex.lastIndex;
   }
 
-  if (lastIndex < rawString.length) {
-    const remainingText = rawString.slice(lastIndex);
+  if (lastIndex < mainText.length) {
+    const remainingText = mainText.slice(lastIndex);
     segments.push({ type: 'text', content: remainingText });
     fullSentenceText += remainingText;
   }
@@ -80,12 +83,12 @@ export function parseClozeItem(rawString: string, itemId: string): ParsedClozeIt
   return {
     segments,
     fullTargetSentence: fullSentenceText,
+    translation,
   };
 }
 
 /**
  * Parse Matching items list
- * Item format: "Always => Luôn luôn"
  */
 export function parseMatchingItems(items: string[]): MatchingPair[] {
   return items
@@ -103,24 +106,30 @@ export function parseMatchingItems(items: string[]): MatchingPair[] {
 
 /**
  * Parse Sentence Builder item string
- * Examples: "She | usually gets up | early in the morning."
  */
 export function parseSentenceBuilderItem(rawString: string, itemId: string): ParsedSentenceBuilderItem {
-  let blocks: string[];
+  let mainText = rawString;
+  let translation: string | undefined;
 
-  if (rawString.includes('|')) {
-    blocks = rawString
+  if (rawString.includes('=>')) {
+    const parts = rawString.split('=>');
+    mainText = parts[0].trim();
+    translation = parts[1].trim();
+  }
+
+  let blocks: string[];
+  if (mainText.includes('|')) {
+    blocks = mainText
       .split('|')
       .map((b) => b.trim())
       .filter(Boolean);
   } else {
-    blocks = rawString
+    blocks = mainText
       .trim()
       .split(/\s+/)
       .filter(Boolean);
   }
 
-  // Shuffle blocks, ensuring order changes if length > 1
   let shuffled = shuffleArray(blocks);
   if (blocks.length > 1 && shuffled.join(' ') === blocks.join(' ')) {
     shuffled = [...shuffled].reverse();
@@ -130,31 +139,38 @@ export function parseSentenceBuilderItem(rawString: string, itemId: string): Par
     id: itemId,
     correctBlocks: blocks,
     shuffledBlocks: shuffled,
+    translation,
   };
 }
 
 /**
  * Parse Error Spotter item string
- * Example: "She [go -> goes] to school every day."
  */
 export function parseErrorSpotterItem(rawString: string, itemId: string): ParsedErrorSpotterItem {
-  // Regex to find [wrong -> right]
+  let mainText = rawString;
+  let translation: string | undefined;
+
+  if (rawString.includes('=>')) {
+    const parts = rawString.split('=>');
+    mainText = parts[0].trim();
+    translation = parts[1].trim();
+  }
+
   const pattern = /\[([^\]]+?)\s*->\s*([^\]]+?)\]/g;
-  let match = pattern.exec(rawString);
+  let match = pattern.exec(mainText);
   
   const tokens: ParsedErrorSpotterItem['tokens'] = [];
-  let fullSentence = rawString;
+  let fullSentence = mainText;
 
   if (match) {
     const wrongWord = match[1].trim();
     const correctWord = match[2].trim();
     
-    const beforeText = rawString.slice(0, match.index);
-    const afterText = rawString.slice(match.index + match[0].length);
+    const beforeText = mainText.slice(0, match.index);
+    const afterText = mainText.slice(match.index + match[0].length);
 
     fullSentence = `${beforeText}${correctWord}${afterText}`;
 
-    // Tokenize before text
     const beforeWords = beforeText.split(/(\s+)/).filter(Boolean);
     beforeWords.forEach((w, idx) => {
       if (w.trim()) {
@@ -163,12 +179,9 @@ export function parseErrorSpotterItem(rawString: string, itemId: string): Parsed
           text: w,
           isErrorTarget: false,
         });
-      } else {
-        // preserve whitespace if needed or attach to token
       }
     });
 
-    // The error token
     tokens.push({
       id: `${itemId}-tok-err`,
       text: wrongWord,
@@ -177,7 +190,6 @@ export function parseErrorSpotterItem(rawString: string, itemId: string): Parsed
       correctWord,
     });
 
-    // Tokenize after text
     const afterWords = afterText.split(/(\s+)/).filter(Boolean);
     afterWords.forEach((w, idx) => {
       if (w.trim()) {
@@ -189,8 +201,7 @@ export function parseErrorSpotterItem(rawString: string, itemId: string): Parsed
       }
     });
   } else {
-    // Fallback if formatting was simple text
-    const words = rawString.split(/\s+/);
+    const words = mainText.split(/\s+/);
     words.forEach((w, idx) => {
       tokens.push({
         id: `${itemId}-tok-${idx}`,
@@ -204,19 +215,28 @@ export function parseErrorSpotterItem(rawString: string, itemId: string): Parsed
     id: itemId,
     tokens,
     fullSentence,
+    translation,
   };
 }
 
 /**
  * Parse Word Scramble item string
- * Format: "beautiful" or "beautiful|A pretty appearance"
  */
 export function parseWordScrambleItem(rawString: string, itemId: string): ParsedWordScrambleItem {
-  let word = rawString.trim();
+  let mainText = rawString.trim();
+  let translation: string | undefined;
+
+  if (rawString.includes('=>')) {
+    const parts = rawString.split('=>');
+    mainText = parts[0].trim();
+    translation = parts[1].trim();
+  }
+
+  let word = mainText;
   let hint: string | undefined;
 
-  if (rawString.includes('|')) {
-    const parts = rawString.split('|');
+  if (mainText.includes('|')) {
+    const parts = mainText.split('|');
     word = parts[0].trim();
     hint = parts[1].trim();
   }
@@ -233,6 +253,7 @@ export function parseWordScrambleItem(rawString: string, itemId: string): Parsed
     id: itemId,
     originalWord: word,
     hint,
+    translation,
     scrambledLetters: scrambled,
   };
 }

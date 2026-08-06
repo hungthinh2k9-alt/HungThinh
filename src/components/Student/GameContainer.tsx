@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Lesson, Game } from '../../types/lesson';
+import type { Lesson, Game, MissedQuestion } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { ClozeEngine } from './ClozeEngine';
@@ -8,7 +8,8 @@ import { SentenceBuilderEngine } from './SentenceBuilderEngine';
 import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
 import { LessonSummary } from './LessonSummary';
-import { Flame, Trophy, ArrowLeft, Clock } from 'lucide-react';
+import { MistakesReview } from './MistakesReview';
+import { Flame, Trophy, ArrowLeft, Clock, RotateCcw } from 'lucide-react';
 import { saveStudentLessonProgress } from '../../utils/storage';
 
 interface GameContainerProps {
@@ -29,20 +30,32 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [totalQuestionsAnswered, setTotalQuestionsAnswered] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [startTime, setStartTime] = useState(Date.now());
+  const [startTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [missedQuestions, setMissedQuestions] = useState<MissedQuestion[]>([]);
+  const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
 
   const t = translations[lang];
 
   useEffect(() => {
-    if (isFinished) return;
+    if (isFinished || isReviewingMistakes) return;
     const interval = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, [startTime, isFinished]);
+  }, [startTime, isFinished, isReviewingMistakes]);
 
   const currentGame: Game = lesson.games[currentGameIndex];
+
+  const handleRecordMistake = (rawItem: string) => {
+    const newMissed: MissedQuestion = {
+      id: `m-${Date.now()}-${Math.random()}`,
+      gameType: currentGame.type,
+      gameInstruction: currentGame.instruction,
+      rawItem,
+    };
+    setMissedQuestions((prev) => [...prev, newMissed]);
+  };
 
   const handleItemCompleted = (isCorrect: boolean) => {
     setTotalQuestionsAnswered((prev) => prev + 1);
@@ -65,8 +78,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       setCurrentGameIndex((prev) => prev + 1);
     } else {
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
-      saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime);
-      setElapsedSeconds(totalTime);
+      const accuracyPercent = totalQuestionsAnswered > 0
+        ? Math.round((correctAnswersCount / totalQuestionsAnswered) * 100)
+        : 100;
+      
+      saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime, accuracyPercent);
       setIsFinished(true);
     }
   };
@@ -88,11 +104,21 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     }
   };
 
+  if (isReviewingMistakes) {
+    return (
+      <MistakesReview
+        missedQuestions={missedQuestions}
+        lang={lang}
+        onBack={() => setIsReviewingMistakes(false)}
+        onClearMistakes={() => setMissedQuestions([])}
+      />
+    );
+  }
+
   if (isFinished) {
     return (
       <LessonSummary
         lesson={lesson}
-        lang={lang}
         score={score}
         maxStreak={maxStreak}
         totalQuestions={totalQuestionsAnswered}
@@ -105,8 +131,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setScore(0);
           setCorrectAnswersCount(0);
           setTotalQuestionsAnswered(0);
-          setElapsedSeconds(0);
-          setStartTime(Date.now());
           setIsFinished(false);
         }}
         onBackToDashboard={onBackToDashboard}
@@ -119,7 +143,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   return (
     <div className="game-container-layout">
       {/* Header bar */}
-      <div className="game-header-bar">
+      <div className="game-header-bar flex-wrap">
         <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
           <ArrowLeft size={20} />
         </button>
@@ -132,6 +156,16 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
 
         <div className="game-stats-pill">
+          {missedQuestions.length > 0 && (
+            <button
+              className="btn-secondary-small danger animate-pulse"
+              onClick={() => setIsReviewingMistakes(true)}
+              title={t.reviewMistakes}
+            >
+              <RotateCcw size={14} /> {t.reviewMistakes} ({missedQuestions.length})
+            </button>
+          )}
+
           {streak > 0 && (
             <div className="stat-item streak-pill animate-bounce-subtle">
               <Flame size={18} className="icon-flame" />
@@ -151,8 +185,24 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
+      {/* Student Game Picker Tabs */}
+      <div className="game-picker-container mt-2">
+        <span className="picker-label">{t.selectExercise}</span>
+        <div className="picker-tabs">
+          {lesson.games.map((g, idx) => (
+            <button
+              key={g.id || idx}
+              onClick={() => setCurrentGameIndex(idx)}
+              className={`picker-tab ${idx === currentGameIndex ? 'active' : ''}`}
+            >
+              {idx + 1}. {getGameTypeLabel(g.type)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Progress bar */}
-      <div className="progress-bar-track">
+      <div className="progress-bar-track mt-2">
         <div
           className="progress-bar-fill"
           style={{ width: `${progressPercent}%` }}
@@ -160,14 +210,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       </div>
 
       {/* Game View */}
-      <div className="engine-viewport">
+      <div className="engine-viewport mt-3">
         {currentGame.type === 'cloze' && (
           <ClozeEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
-            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
+            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -175,7 +225,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <MatchingEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
-            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -185,9 +234,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <SentenceBuilderEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
-            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
+            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -195,9 +244,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <ErrorSpotterEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
-            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
+            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -205,9 +254,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <WordScrambleEngine
             key={`game-${currentGame.id}`}
             game={currentGame}
-            lang={lang}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
+            onRecordMistake={handleRecordMistake}
           />
         )}
       </div>

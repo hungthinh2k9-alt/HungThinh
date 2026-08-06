@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Lesson } from './types/lesson';
 import type { Language } from './utils/i18n';
 import { getStoredLanguage, saveStoredLanguage, translations } from './utils/i18n';
-import { cacheStoredLessons, getStoredLessons, saveStoredLessons } from './utils/storage';
+import { getStoredLessons, saveStoredLessons } from './utils/storage';
 import { fetchLessonsFromSupabase } from './utils/supabase';
 import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
@@ -26,7 +26,7 @@ export function App() {
       const remoteData = await fetchLessonsFromSupabase();
       if (remoteData !== null) {
         setLessons(remoteData);
-        cacheStoredLessons(remoteData);
+        saveStoredLessons(remoteData);
       } else {
         const localData = getStoredLessons();
         setLessons(localData);

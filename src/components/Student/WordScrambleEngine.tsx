@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseWordScrambleItem } from '../../utils/parsers';
 import { CheckCircle2, HelpCircle, RotateCcw } from 'lucide-react';
-import type { Language } from '../../utils/i18n';
-import { translations } from '../../utils/i18n';
 
 interface WordScrambleEngineProps {
   game: Game;
-  lang: Language;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
+  onRecordMistake?: (rawItem: string) => void;
 }
 
 interface LetterTile {
@@ -19,11 +17,10 @@ interface LetterTile {
 
 export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   game,
-  lang,
   onItemCompleted,
   onGameFinished,
+  onRecordMistake,
 }) => {
-  const t = translations[lang];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bankTiles, setBankTiles] = useState<LetterTile[]>([]);
   const [chosenTiles, setChosenTiles] = useState<LetterTile[]>([]);
@@ -35,8 +32,7 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   const parsed = parseWordScrambleItem(currentRawItem, `ws-${currentIndex}`);
 
   useEffect(() => {
-    const nextParsed = parseWordScrambleItem(game.items[currentIndex], `ws-${currentIndex}`);
-    const tiles: LetterTile[] = nextParsed.scrambledLetters.map((char, idx) => ({
+    const tiles: LetterTile[] = parsed.scrambledLetters.map((char, idx) => ({
       id: `tile-${idx}-${Date.now()}`,
       char,
     }));
@@ -47,7 +43,6 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setIsCorrect(false);
   }, [currentIndex, game]);
 
-  // Support typing on physical keyboard
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (submitted) return;
@@ -100,6 +95,10 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setSubmitted(true);
     setIsCorrect(matched);
     onItemCompleted(matched);
+
+    if (!matched && onRecordMistake) {
+      onRecordMistake(currentRawItem);
+    }
   };
 
   const handleNext = () => {
@@ -113,20 +112,23 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">{t.question} {currentIndex + 1}/{game.items.length}</span>
+        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
       {parsed.hint && (
         <div className="hint-banner mt-2">
           <button className="hint-btn" onClick={() => setShowHint(!showHint)}>
-            <HelpCircle size={16} /> {showHint ? t.hideHint : t.showHint}
+            <HelpCircle size={16} /> {showHint ? ' Hide Hint' : ' Show Hint'}
           </button>
-          {showHint && <span className="hint-text">{parsed.hint}</span>}
+          {showHint && (
+            <span className="hint-text bold-spaced-hint">
+              &nbsp;&nbsp;<strong>{parsed.hint}</strong>
+            </span>
+          )}
         </div>
       )}
 
-      {/* Target construction slots */}
       <div className="scramble-slots-container mt-4">
         <div className="scramble-slots">
           {Array.from({ length: parsed.scrambledLetters.length }).map((_, idx) => {
@@ -145,13 +147,12 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
         </div>
       </div>
 
-      {/* Letter Bank */}
       <div className="letter-bank-container mt-4">
         <div className="bank-header">
-          <span>{t.chooseLetters}</span>
+          <span>Click or type letters:</span>
           {chosenTiles.length > 0 && !submitted && (
             <button className="btn-text" onClick={handleReset}>
-              <RotateCcw size={14} /> {t.clearAll}
+              <RotateCcw size={14} /> Clear
             </button>
           )}
         </div>
@@ -174,10 +175,13 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
           <div className="feedback-content">
             <CheckCircle2 size={24} />
             <div>
-              <p className="feedback-title">{isCorrect ? t.correctSpelling : t.incorrectSpelling}</p>
-              {!isCorrect && (
-                <p className="feedback-detail">
-                  {t.correctWord} <strong>{parsed.originalWord}</strong>
+              <p className="feedback-title">{isCorrect ? 'Correct Spelling!' : 'Incorrect Spelling!'}</p>
+              <p className="feedback-detail">
+                Target word: <strong>{parsed.originalWord}</strong>
+              </p>
+              {parsed.translation && (
+                <p className="feedback-translation mt-1">
+                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -192,11 +196,11 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
             onClick={handleCheck}
             disabled={bankTiles.length > 0}
           >
-            {t.checkWord}
+            Check Word
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? t.nextQuestion : t.finishSection}
+            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
           </button>
         )}
       </div>

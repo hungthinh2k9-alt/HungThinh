@@ -18,6 +18,7 @@ export interface Lesson {
 export interface StudentProgress {
   completedLessons: Record<string, {
     highScore: number;
+    stars: number; // 1 to 10 stars rating
     totalGames: number;
     bestTimeSeconds: number;
     completedAt: string;
@@ -26,7 +27,6 @@ export interface StudentProgress {
 
 // Parsed Data Structures for Game Engines
 
-// Cloze item segment
 export type ClozeSegment = 
   | { type: 'text'; content: string }
   | { type: 'blank'; id: string; target: string; hint?: string; isPartial: boolean; prefix?: string; suffix?: string };
@@ -34,23 +34,22 @@ export type ClozeSegment =
 export interface ParsedClozeItem {
   segments: ClozeSegment[];
   fullTargetSentence: string;
+  translation?: string;
 }
 
-// Matching item pair
 export interface MatchingPair {
   id: string;
   left: string;
   right: string;
 }
 
-// Sentence builder item
 export interface ParsedSentenceBuilderItem {
   id: string;
   correctBlocks: string[];
   shuffledBlocks: string[];
+  translation?: string;
 }
 
-// Error spotter item
 export interface ParsedErrorSpotterItem {
   id: string;
   tokens: Array<{
@@ -61,12 +60,21 @@ export interface ParsedErrorSpotterItem {
     correctWord?: string;
   }>;
   fullSentence: string;
+  translation?: string;
 }
 
-// Word scramble item
 export interface ParsedWordScrambleItem {
   id: string;
   originalWord: string;
   hint?: string;
+  translation?: string;
   scrambledLetters: string[];
+}
+
+// Missed Question Item for Review Mode
+export interface MissedQuestion {
+  id: string;
+  gameType: GameType;
+  gameInstruction: string;
+  rawItem: string;
 }
