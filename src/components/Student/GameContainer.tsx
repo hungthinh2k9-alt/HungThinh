@@ -9,8 +9,10 @@ import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
 import { LessonSummary } from './LessonSummary';
 import { MistakesReview } from './MistakesReview';
-import { Flame, Trophy, ArrowLeft, Clock, RotateCcw } from 'lucide-react';
+import { Flame, Trophy, ArrowLeft, RotateCcw } from 'lucide-react';
 import { saveStudentLessonProgress } from '../../utils/storage';
+
+const COUNTDOWN_TOTAL_SECONDS = 300; // 5 minutes per lesson
 
 interface GameContainerProps {
   lesson: Lesson;
@@ -46,6 +48,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   }, [startTime, isFinished, isReviewingMistakes]);
 
   const currentGame: Game = lesson.games[currentGameIndex];
+
+  // Countdown timer
+  const remainingSeconds = Math.max(0, COUNTDOWN_TOTAL_SECONDS - elapsedSeconds);
+  const countdownPercent = (remainingSeconds / COUNTDOWN_TOTAL_SECONDS) * 100;
+  const countdownMinutes = Math.floor(remainingSeconds / 60);
+  const countdownSecs = remainingSeconds % 60;
+  const isTimeRunningLow = remainingSeconds < 60;
 
   const handleRecordMistake = (rawItem: string) => {
     const newMissed: MissedQuestion = {
@@ -85,12 +94,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime, accuracyPercent);
       setIsFinished(true);
     }
-  };
-
-  const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
   const getGameTypeLabel = (type: string) => {
@@ -142,52 +145,62 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <div className="game-container-layout">
-      {/* Header bar */}
-      <div className="game-header-bar flex-wrap">
-        <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
-          <ArrowLeft size={20} />
-        </button>
-
-        <div className="header-info">
-          <h2 className="lesson-header-title">{lesson.title}</h2>
-          <span className="game-type-badge">
-            {lang === 'vi' ? `Bài ${currentGameIndex + 1} / ${lesson.games.length}` : `Exercise ${currentGameIndex + 1} of ${lesson.games.length}`}: {getGameTypeLabel(currentGame.type)}
-          </span>
+      {/* Top bar: back + title on left, score on right */}
+      <div className="game-top-bar">
+        <div className="game-top-left">
+          <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
+            <ArrowLeft size={20} />
+          </button>
+          <div className="header-info">
+            <h2 className="lesson-header-title">{lesson.title}</h2>
+            <span className="game-type-badge">
+              {lang === 'vi' ? `Bài ${currentGameIndex + 1} / ${lesson.games.length}` : `${currentGameIndex + 1} / ${lesson.games.length}`} · {getGameTypeLabel(currentGame.type)}
+            </span>
+          </div>
         </div>
 
-        <div className="game-stats-pill">
-          {missedQuestions.length > 0 && (
-            <button
-              className="btn-secondary-small danger animate-pulse"
-              onClick={() => setIsReviewingMistakes(true)}
-              title={t.reviewMistakes}
-            >
-              <RotateCcw size={14} /> {t.reviewMistakes} ({missedQuestions.length})
-            </button>
-          )}
+        <div className="game-top-right">
+          <div className="score-display">
+            <Trophy size={18} className="score-icon" />
+            <span className="score-value">{score}</span>
+          </div>
 
           {streak > 0 && (
-            <div className="stat-item streak-pill animate-bounce-subtle">
-              <Flame size={18} className="icon-flame" />
-              <span>{streak} {t.streak}</span>
+            <div className="streak-display animate-bounce-subtle">
+              <Flame size={16} className="icon-flame" />
+              <span>{streak}🔥</span>
             </div>
           )}
 
-          <div className="stat-item score-pill">
-            <Trophy size={18} className="icon-trophy" />
-            <span>{score} {t.pts}</span>
-          </div>
-
-          <div className="stat-item time-pill">
-            <Clock size={16} />
-            <span>{formatTime(elapsedSeconds)}</span>
-          </div>
+          {missedQuestions.length > 0 && (
+            <button
+              className="mistakes-btn"
+              onClick={() => setIsReviewingMistakes(true)}
+              title={t.reviewMistakes}
+            >
+              <RotateCcw size={14} /> {missedQuestions.length}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Student Game Picker Tabs */}
-      <div className="game-picker-container mt-2">
-        <span className="picker-label">{t.selectExercise}</span>
+      {/* Countdown Timer Bar */}
+      <div className="countdown-bar-container">
+        <div className="countdown-label">
+          <span className={`countdown-time ${isTimeRunningLow ? 'time-low' : ''}`}>
+            {countdownMinutes}:{countdownSecs < 10 ? '0' : ''}{countdownSecs}
+          </span>
+        </div>
+        <div className="countdown-track">
+          <div
+            className={`countdown-fill ${isTimeRunningLow ? 'low' : ''}`}
+            style={{ width: `${countdownPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Game Picker Tabs */}
+      <div className="game-picker-container">
         <div className="picker-tabs">
           {lesson.games.map((g, idx) => (
             <button
@@ -201,16 +214,16 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="progress-bar-track mt-2">
+      {/* Lesson Progress */}
+      <div className="progress-bar-track">
         <div
           className="progress-bar-fill"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
 
-      {/* Game View */}
-      <div className="engine-viewport mt-3">
+      {/* Game Engine View */}
+      <div className="engine-viewport">
         {currentGame.type === 'cloze' && (
           <ClozeEngine
             key={`game-${currentGame.id}`}

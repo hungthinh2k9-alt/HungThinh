@@ -144,24 +144,36 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
         })}
       </div>
 
-      {submitted && (
-        <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up`}>
-          <div className="feedback-content">
-            {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
-            <div>
-              <p className="feedback-title">{isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng!'}</p>
-              <p className="feedback-detail">
-                <strong>{parsed.fullTargetSentence}</strong>
-              </p>
-              {parsed.translation && (
-                <p className="feedback-translation mt-1">
-                  🇻🇳 <strong>{parsed.translation}</strong>
+      {submitted && (() => {
+        // Collect Vietnamese hints from blanks
+        const blankHints = parsed.segments
+          .filter((seg): seg is Extract<typeof seg, { type: 'blank' }> => seg.type === 'blank' && !!seg.hint)
+          .map((seg) => `${seg.target} = ${seg.hint}`);
+        
+        return (
+          <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up`}>
+            <div className="feedback-content">
+              {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
+              <div>
+                <p className="feedback-title">{isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng!'}</p>
+                <p className="feedback-detail">
+                  <strong>{parsed.fullTargetSentence}</strong>
                 </p>
-              )}
+                {parsed.translation && (
+                  <p className="feedback-translation mt-2">
+                    🇻🇳 <strong>{parsed.translation}</strong>
+                  </p>
+                )}
+                {blankHints.length > 0 && !parsed.translation && (
+                  <p className="feedback-translation mt-2">
+                    🇻🇳 <strong>{blankHints.join(' · ')}</strong>
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="game-actions">
         {!submitted ? (
