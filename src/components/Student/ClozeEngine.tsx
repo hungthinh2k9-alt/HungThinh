@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseClozeItem } from '../../utils/parsers';
-import { CheckCircle2, HelpCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 
 interface ClozeEngineProps {
   game: Game;
@@ -37,8 +37,12 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
     setUserInputs((prev) => ({ ...prev, [blankId]: val }));
   };
 
-  const handleCheck = () => {
-    if (submitted) return;
+  const isFormComplete = parsed.segments
+    .filter((seg) => seg.type === 'blank')
+    .every((seg) => (userInputs[seg.id] || '').trim().length > 0);
+
+  const handleCheck = useCallback(() => {
+    if (submitted || !isFormComplete) return;
 
     let allBlanksCorrect = true;
     parsed.segments.forEach((seg) => {
@@ -58,24 +62,34 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
     if (!allBlanksCorrect && onRecordMistake) {
       onRecordMistake(currentRawItem);
     }
-  };
+  }, [submitted, isFormComplete, parsed, userInputs, currentRawItem, onItemCompleted, onRecordMistake]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentIndex < game.items.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       onGameFinished();
     }
-  };
+  }, [currentIndex, game.items.length, onGameFinished]);
 
-  const isFormComplete = parsed.segments
-    .filter((seg) => seg.type === 'blank')
-    .every((seg) => (userInputs[seg.id] || '').trim().length > 0);
+  // Enter key: submit answer or go to next question
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!submitted && isFormComplete) {
+        handleCheck();
+      } else if (submitted) {
+        handleNext();
+      }
+    }
+  }, [submitted, isFormComplete, handleCheck, handleNext]);
 
   return (
-    <div className="game-card shadow-lg animate-fade-in">
+    <div className="game-card shadow-lg animate-fade-in" onKeyDown={handleKeyDown}>
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">
+          {currentIndex + 1} / {game.items.length}
+        </span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
@@ -101,6 +115,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
                 disabled={submitted}
                 placeholder={'_'.repeat(targetLen)}
                 maxLength={targetLen + 5}
+                autoComplete="off"
                 className={`cloze-underline-input ${
                   isBlankCorrect ? 'correct' : isBlankError ? 'incorrect' : ''
                 }`}
@@ -132,15 +147,15 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
       {submitted && (
         <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up`}>
           <div className="feedback-content">
-            <CheckCircle2 size={24} />
+            {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
             <div>
-              <p className="feedback-title">{isCorrect ? 'Well done!' : 'Keep practicing!'}</p>
+              <p className="feedback-title">{isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng!'}</p>
               <p className="feedback-detail">
-                Correct sentence: <strong>{parsed.fullTargetSentence}</strong>
+                <strong>{parsed.fullTargetSentence}</strong>
               </p>
               {parsed.translation && (
                 <p className="feedback-translation mt-1">
-                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
+                  🇻🇳 <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -155,11 +170,11 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
             onClick={handleCheck}
             disabled={!isFormComplete}
           >
-            Check Answer
+            Kiểm tra ↵
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? 'Câu tiếp →' : 'Hoàn thành →'}
           </button>
         )}
       </div>

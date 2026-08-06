@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseErrorSpotterItem } from '../../utils/parsers';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface ErrorSpotterEngineProps {
   game: Game;
@@ -38,8 +38,10 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
     setCorrectionInput('');
   };
 
-  const handleCheck = () => {
-    if (submitted) return;
+  const canSubmit = !!selectedTokenId && correctionInput.trim().length > 0;
+
+  const handleCheck = useCallback(() => {
+    if (submitted || !canSubmit) return;
 
     const selectedToken = parsed.tokens.find((t) => t.id === selectedTokenId);
     let matched = false;
@@ -59,24 +61,35 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
     if (!matched && onRecordMistake) {
       onRecordMistake(currentRawItem);
     }
-  };
+  }, [submitted, canSubmit, parsed, selectedTokenId, correctionInput, currentRawItem, onItemCompleted, onRecordMistake]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentIndex < game.items.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       onGameFinished();
+    }
+  }, [currentIndex, game.items.length, onGameFinished]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!submitted && canSubmit) {
+        handleCheck();
+      } else if (submitted) {
+        handleNext();
+      }
     }
   };
 
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{currentIndex + 1} / {game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
-      <div className="error-sentence-box">
+      <div className="error-sentence-box" onKeyDown={handleKeyDown}>
         {parsed.tokens.map((token) => {
           const isSelected = selectedTokenId === token.id;
 
@@ -87,9 +100,11 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
                   type="text"
                   value={correctionInput}
                   onChange={(e) => setCorrectionInput(e.target.value)}
-                  placeholder={`Correct '${token.text}'`}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`Sửa '${token.text}'`}
                   disabled={submitted}
                   autoFocus
+                  autoComplete="off"
                   className="error-correction-input"
                 />
               </span>
@@ -112,23 +127,23 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
       </div>
 
       <div className="hint-subtext mt-2">
-        💡 Click on the incorrect word in the sentence above to fix it.
+        💡 Bấm vào từ sai trong câu rồi nhập từ đúng để sửa.
       </div>
 
       {submitted && (
         <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up mt-4`}>
           <div className="feedback-content">
-            {isCorrect ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+            {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
             <div>
               <p className="feedback-title">
-                {isCorrect ? 'Great eye! You spotted and fixed the error.' : 'Not quite right!'}
+                {isCorrect ? '✅ Phát hiện và sửa đúng lỗi sai!' : '❌ Chưa chính xác!'}
               </p>
               <p className="feedback-detail">
-                Correct sentence: <strong>{parsed.fullSentence}</strong>
+                <strong>{parsed.fullSentence}</strong>
               </p>
               {parsed.translation && (
                 <p className="feedback-translation mt-1">
-                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
+                  🇻🇳 <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -141,13 +156,13 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
           <button
             className="btn-primary"
             onClick={handleCheck}
-            disabled={!selectedTokenId || correctionInput.trim().length === 0}
+            disabled={!canSubmit}
           >
-            Submit Correction
+            Gửi đáp án ↵
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? 'Câu tiếp →' : 'Hoàn thành →'}
           </button>
         )}
       </div>

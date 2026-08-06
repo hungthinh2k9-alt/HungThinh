@@ -8,7 +8,7 @@ import { LessonList } from './components/Student/LessonList';
 import { GameContainer } from './components/Student/GameContainer';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { AdminLogin } from './components/Admin/AdminLogin';
-import { GraduationCap, Settings, BookOpen } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 
 export function App() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -46,68 +46,44 @@ export function App() {
     saveStoredLessons(updatedLessons);
   };
 
-  const handleSelectLesson = (lesson: Lesson) => {
-    setSelectedLesson(lesson);
-  };
-
   const handleBackToDashboard = () => {
     setSelectedLesson(null);
+    setActiveTab('student');
   };
 
   const handleLogout = () => {
     setIsAdminAuthenticated(false);
+    setActiveTab('student');
   };
 
   return (
     <div className="app-shell">
-      {/* Navigation Navbar */}
+      {/* Minimal Navbar — student-first, no admin tabs visible */}
       <header className="navbar shadow-sm">
         <div className="navbar-container">
-          <button className="brand-logo" onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}>
+          <button
+            className="brand-logo"
+            onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}
+          >
             <div className="logo-icon-wrapper">
               <BookOpen size={20} className="logo-icon" />
             </div>
             <span className="brand-name">{t.brandName}</span>
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="lang-switcher-pill">
-              <button
-                className={`lang-btn ${lang === 'vi' ? 'active' : ''}`}
-                onClick={() => handleLanguageToggle('vi')}
-                aria-label="Dùng tiếng Việt"
-              >
-                Tiếng Việt
-              </button>
-              <button
-                className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
-                onClick={() => handleLanguageToggle('en')}
-                aria-label="Use English"
-              >
-                English
-              </button>
-            </div>
-
-            <nav className="nav-tabs">
-              <button
-                className={`nav-tab ${activeTab === 'student' && !selectedLesson ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('student');
-                  setSelectedLesson(null);
-                }}
-              >
-                <GraduationCap size={18} /> {t.studentView}
-              </button>
-              <button
-                className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('admin');
-                  setSelectedLesson(null);
-                }}
-              >
-                <Settings size={18} /> {t.adminView}
-              </button>
-            </nav>
+          <div className="lang-switcher-pill">
+            <button
+              className={`lang-btn ${lang === 'vi' ? 'active' : ''}`}
+              onClick={() => handleLanguageToggle('vi')}
+            >
+              Tiếng Việt
+            </button>
+            <button
+              className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
+              onClick={() => handleLanguageToggle('en')}
+            >
+              English
+            </button>
           </div>
         </div>
       </header>
@@ -132,7 +108,7 @@ export function App() {
                 <LessonList
                   lessons={lessons}
                   lang={lang}
-                  onSelectLesson={handleSelectLesson}
+                  onSelectLesson={(lesson) => setSelectedLesson(lesson)}
                 />
               )
             )}
@@ -156,7 +132,27 @@ export function App() {
         )}
       </main>
 
-      <footer className="app-footer">{t.brandName}</footer>
+      {/* Footer with subtle admin login link */}
+      <footer className="app-footer">
+        <span>{t.brandName}</span>
+        <span className="footer-separator">·</span>
+        {activeTab === 'admin' ? (
+          <button
+            className="footer-link"
+            onClick={() => { setActiveTab('student'); setSelectedLesson(null); }}
+          >
+            {lang === 'vi' ? '← Về trang học sinh' : '← Back to student view'}
+          </button>
+        ) : (
+          <button
+            className="footer-link"
+            onClick={() => setActiveTab('admin')}
+          >
+            <Settings size={13} />
+            <span>{lang === 'vi' ? 'Quản lý giáo viên' : 'Teacher login'}</span>
+          </button>
+        )}
+      </footer>
     </div>
   );
 }

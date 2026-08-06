@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseSentenceBuilderItem } from '../../utils/parsers';
-import { CheckCircle2, RotateCcw } from 'lucide-react';
+import { CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 
 interface SentenceBuilderEngineProps {
   game: Game;
@@ -54,7 +54,7 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
     setConstructedBlocks([]);
   };
 
-  const handleCheck = () => {
+  const handleCheck = useCallback(() => {
     if (submitted) return;
     const userSentence = constructedBlocks.map((b) => b.text).join(' ');
     const correctSentence = parsed.correctBlocks.join(' ');
@@ -67,28 +67,44 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
     if (!matched && onRecordMistake) {
       onRecordMistake(currentRawItem);
     }
-  };
+  }, [submitted, constructedBlocks, parsed, currentRawItem, onItemCompleted, onRecordMistake]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentIndex < game.items.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       onGameFinished();
     }
-  };
+  }, [currentIndex, game.items.length, onGameFinished]);
+
+  // Enter key support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!submitted && bankBlocks.length === 0 && constructedBlocks.length > 0) {
+          handleCheck();
+        } else if (submitted) {
+          handleNext();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [submitted, bankBlocks, constructedBlocks, handleCheck, handleNext]);
 
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{currentIndex + 1} / {game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
       <div className="drop-zone-container">
-        <div className="drop-zone-label">Your Sentence:</div>
+        <div className="drop-zone-label">Câu trả lời của bạn:</div>
         <div className={`drop-zone ${constructedBlocks.length === 0 ? 'empty' : ''}`}>
           {constructedBlocks.length === 0 ? (
-            <span className="placeholder-text">Click blocks below to form the sentence</span>
+            <span className="placeholder-text">Bấm vào các khối từ bên dưới để ghép câu</span>
           ) : (
             constructedBlocks.map((b) => (
               <button
@@ -106,10 +122,10 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
 
       <div className="word-bank-container mt-4">
         <div className="bank-header">
-          <span>Available Blocks:</span>
+          <span>Các khối từ:</span>
           {constructedBlocks.length > 0 && !submitted && (
             <button className="btn-text" onClick={handleReset}>
-              <RotateCcw size={14} /> Clear All
+              <RotateCcw size={14} /> Xóa lại
             </button>
           )}
         </div>
@@ -130,15 +146,15 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
       {submitted && (
         <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up mt-4`}>
           <div className="feedback-content">
-            <CheckCircle2 size={24} />
+            {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
             <div>
-              <p className="feedback-title">{isCorrect ? 'Perfect arrangement!' : 'Incorrect order!'}</p>
+              <p className="feedback-title">{isCorrect ? '✅ Ghép hoàn toàn chính xác!' : '❌ Thứ tự chưa đúng!'}</p>
               <p className="feedback-detail">
-                Correct sequence: <strong>{parsed.correctBlocks.join(' ')}</strong>
+                <strong>{parsed.correctBlocks.join(' ')}</strong>
               </p>
               {parsed.translation && (
                 <p className="feedback-translation mt-1">
-                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
+                  🇻🇳 <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -151,13 +167,13 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
           <button
             className="btn-primary"
             onClick={handleCheck}
-            disabled={bankBlocks.length > 0 && constructedBlocks.length === 0}
+            disabled={bankBlocks.length > 0 || constructedBlocks.length === 0}
           >
-            Check Sentence
+            Kiểm tra ↵
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? 'Câu tiếp →' : 'Hoàn thành →'}
           </button>
         )}
       </div>

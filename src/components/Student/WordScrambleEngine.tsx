@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseWordScrambleItem } from '../../utils/parsers';
-import { CheckCircle2, HelpCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle2, XCircle, HelpCircle, RotateCcw } from 'lucide-react';
 
 interface WordScrambleEngineProps {
   game: Game;
@@ -43,8 +43,41 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setIsCorrect(false);
   }, [currentIndex, game]);
 
+  const handleCheck = useCallback(() => {
+    if (submitted || bankTiles.length > 0) return;
+    const constructedWord = chosenTiles.map((t) => t.char).join('').toLowerCase();
+    const targetWord = parsed.originalWord.replace(/\s+/g, '').toLowerCase();
+    const matched = constructedWord === targetWord;
+
+    setSubmitted(true);
+    setIsCorrect(matched);
+    onItemCompleted(matched);
+
+    if (!matched && onRecordMistake) {
+      onRecordMistake(currentRawItem);
+    }
+  }, [submitted, bankTiles, chosenTiles, parsed, currentRawItem, onItemCompleted, onRecordMistake]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < game.items.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      onGameFinished();
+    }
+  }, [currentIndex, game.items.length, onGameFinished]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!submitted && bankTiles.length === 0 && chosenTiles.length > 0) {
+          handleCheck();
+        } else if (submitted) {
+          handleNext();
+        }
+        return;
+      }
+
       if (submitted) return;
       const key = e.key.toLowerCase();
 
@@ -66,7 +99,7 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [bankTiles, chosenTiles, submitted]);
+  }, [bankTiles, chosenTiles, submitted, handleCheck, handleNext]);
 
   const handleBankTileClick = (tile: LetterTile) => {
     if (submitted) return;
@@ -86,40 +119,17 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setChosenTiles([]);
   };
 
-  const handleCheck = () => {
-    if (submitted) return;
-    const constructedWord = chosenTiles.map((t) => t.char).join('').toLowerCase();
-    const targetWord = parsed.originalWord.replace(/\s+/g, '').toLowerCase();
-    const matched = constructedWord === targetWord;
-
-    setSubmitted(true);
-    setIsCorrect(matched);
-    onItemCompleted(matched);
-
-    if (!matched && onRecordMistake) {
-      onRecordMistake(currentRawItem);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < game.items.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      onGameFinished();
-    }
-  };
-
   return (
     <div className="game-card shadow-lg animate-fade-in">
       <div className="game-item-header">
-        <span className="step-badge">Question {currentIndex + 1} of {game.items.length}</span>
+        <span className="step-badge">{currentIndex + 1} / {game.items.length}</span>
         <h3 className="game-instruction">{game.instruction}</h3>
       </div>
 
       {parsed.hint && (
         <div className="hint-banner mt-2">
           <button className="hint-btn" onClick={() => setShowHint(!showHint)}>
-            <HelpCircle size={16} /> {showHint ? ' Hide Hint' : ' Show Hint'}
+            <HelpCircle size={16} /> {showHint ? 'Ẩn gợi ý' : 'Xem gợi ý'}
           </button>
           {showHint && (
             <span className="hint-text bold-spaced-hint">
@@ -149,10 +159,10 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
 
       <div className="letter-bank-container mt-4">
         <div className="bank-header">
-          <span>Click or type letters:</span>
+          <span>Bấm hoặc gõ chữ cái:</span>
           {chosenTiles.length > 0 && !submitted && (
             <button className="btn-text" onClick={handleReset}>
-              <RotateCcw size={14} /> Clear
+              <RotateCcw size={14} /> Xóa lại
             </button>
           )}
         </div>
@@ -173,15 +183,15 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
       {submitted && (
         <div className={`feedback-banner ${isCorrect ? 'success' : 'error'} animate-slide-up mt-4`}>
           <div className="feedback-content">
-            <CheckCircle2 size={24} />
+            {isCorrect ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
             <div>
-              <p className="feedback-title">{isCorrect ? 'Correct Spelling!' : 'Incorrect Spelling!'}</p>
+              <p className="feedback-title">{isCorrect ? '✅ Đánh vần đúng!' : '❌ Chưa đúng chính tả!'}</p>
               <p className="feedback-detail">
-                Target word: <strong>{parsed.originalWord}</strong>
+                <strong>{parsed.originalWord}</strong>
               </p>
               {parsed.translation && (
                 <p className="feedback-translation mt-1">
-                  🇻🇳 Nghĩa tiếng Việt: <strong>{parsed.translation}</strong>
+                  🇻🇳 <strong>{parsed.translation}</strong>
                 </p>
               )}
             </div>
@@ -196,11 +206,11 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
             onClick={handleCheck}
             disabled={bankTiles.length > 0}
           >
-            Check Word
+            Kiểm tra ↵
           </button>
         ) : (
           <button className="btn-primary" onClick={handleNext}>
-            {currentIndex < game.items.length - 1 ? 'Next Question →' : 'Finish Section →'}
+            {currentIndex < game.items.length - 1 ? 'Câu tiếp →' : 'Hoàn thành →'}
           </button>
         )}
       </div>

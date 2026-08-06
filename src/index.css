@@ -874,6 +874,30 @@ input, textarea, select {
   font-size: 0.82rem;
   border-top: 1px solid var(--border-color);
   background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-separator {
+  color: #cbd5e1;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  opacity: 0.7;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.footer-link:hover {
+  opacity: 1;
+  color: var(--accent-primary);
 }
 
 .mt-1 { margin-top: 0.25rem; }
@@ -931,3 +955,305 @@ input, textarea, select {
     justify-content: flex-start;
   }
 }
+
+/* Hint & Text Buttons */
+.hint-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-text {
+  color: var(--accent-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-text:hover {
+  text-decoration: underline;
+}
+
+.btn-text-small {
+  color: var(--accent-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-icon-small {
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-icon-small.danger {
+  color: var(--color-error);
+}
+
+.btn-icon-tiny {
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+/* Item row in game editor */
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-index {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 1.5rem;
+}
+
+.item-row-actions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* Game editor header */
+.game-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-editor-controls {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.game-number-badge {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent-primary);
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.items-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Lesson editor header */
+.admin-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.editor-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.card-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.games-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Spinner */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pop {
+  animation: popIn 0.15s ease-out;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); }
+  to { transform: scale(1); }
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.35s ease-out;
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSub 1s ease infinite;
+}
+
+@keyframes bounceSub {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Sentence Builder & Word Scramble Containers */
+.scramble-slots-container {
+  display: flex;
+  justify-content: center;
+}
+
+.scramble-slots {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.letter-slot {
+  width: 46px;
+  height: 52px;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.letter-slot.filled {
+  background: #ffffff;
+  border-style: solid;
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15);
+}
+
+.letter-bank-container {
+  text-align: center;
+}
+
+.letter-bank {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.letter-tile {
+  width: 44px;
+  height: 48px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-main);
+}
+
+.letter-tile:hover:not(:disabled) {
+  background: var(--accent-secondary);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* Summary screen extras */
+.trophy-badge {
+  margin-bottom: 0.5rem;
+}
+
+.justify-center { justify-content: center; }
+.text-amber-500 { color: #f59e0b; }
+.text-amber-600 { color: #d97706; }
+.text-base { font-size: 1rem; }
+.mb-4 { margin-bottom: 1rem; }
+.font-bold { font-weight: 700; }
+.text-sm { font-size: 0.875rem; }
+.fill-amber-400 { fill: #fbbf24; }
+.text-amber-400 { color: #fbbf24; }
+.fill-emerald-100 { fill: #d1fae5; }
+.text-emerald-500 { color: #10b981; }
+.text-slate-300 { color: #cbd5e1; }
+.text-indigo-600 { color: #4f46e5; }
+.text-muted { color: var(--text-muted); }
+.fill-current { fill: currentColor; }
+
