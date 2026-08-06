@@ -120,7 +120,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
                 onChange={(e) => handleInputChange(seg.id, e.target.value)}
                 disabled={submitted}
                 placeholder={spacedPlaceholder}
-                maxLength={targetLen + 20}
+                maxLength={targetLen}
                 autoComplete="off"
                 className={`cloze-underline-input ${
                   isBlankCorrect ? 'correct' : isBlankError ? 'incorrect' : ''

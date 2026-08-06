@@ -7,6 +7,7 @@ interface MatchingEngineProps {
   game: Game;
   onItemCompleted: (isCorrect: boolean) => void;
   onGameFinished: () => void;
+  onPairCompleted?: (pairIndex: number, isCorrect: boolean) => void;
 }
 
 interface Point {
@@ -25,6 +26,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   game,
   onItemCompleted,
   onGameFinished,
+  onPairCompleted,
 }) => {
   const [pairs, setPairs] = useState<MatchingPair[]>([]);
   const [rightItems, setRightItems] = useState<{ id: string; text: string }[]>([]);
@@ -130,11 +132,17 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
 
   const checkMatch = (leftId: string, rightId: string) => {
     setAttempts((prev) => prev + 1);
+    const leftIndex = pairs.findIndex((p) => p.id === leftId);
+
     if (leftId === rightId) {
       const newMatched = [...matchedIds, leftId];
       setMatchedIds(newMatched);
       setSelectedLeft(null);
       setSelectedRight(null);
+
+      if (onPairCompleted && leftIndex !== -1) {
+        onPairCompleted(leftIndex, true);
+      }
 
       if (newMatched.length === pairs.length) {
         setIsFinished(true);
@@ -145,6 +153,11 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
       setMismatch(true);
       setMismatchedLeft(leftId);
       setMismatchedRight(rightId);
+
+      if (onPairCompleted && leftIndex !== -1) {
+        onPairCompleted(leftIndex, false);
+      }
+
       setTimeout(() => {
         setMismatch(false);
         setMismatchedLeft(null);

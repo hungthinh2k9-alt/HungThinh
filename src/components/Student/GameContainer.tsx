@@ -78,7 +78,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const currentQ = flatQuestions[safeIndex] || flatQuestions[0];
   const currentGame = currentQ.game;
 
-  // Single-item game for current question - memoized to prevent re-render resets on timer tick
+  // Single-item game for current question (non-matching)
   const singleItemGame: Game = useMemo(() => ({
     id: `${currentGame.id}-q${currentQ.questionNumber}`,
     type: currentGame.type,
@@ -125,6 +125,33 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     }
   };
 
+  const handleMatchingPairCompleted = (questionRef: QuestionRef, pairIndex: number, isCorrect: boolean) => {
+    const matchingQuestions = flatQuestions.filter((q) => q.gameIndex === questionRef.gameIndex);
+    if (!matchingQuestions || matchingQuestions.length === 0) return;
+    const targetQ = matchingQuestions[pairIndex] || matchingQuestions[0];
+    const qNum = targetQ.questionNumber;
+
+    setQuestionStatuses((prev) => ({
+      ...prev,
+      [qNum]: isCorrect ? 'correct' : 'incorrect',
+    }));
+
+    setTotalQuestionsAnswered((prev) => prev + 1);
+    if (isCorrect) {
+      setCorrectAnswersCount((prev) => prev + 1);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > maxStreak) {
+        setMaxStreak(newStreak);
+      }
+      const bonus = Math.min(newStreak * 10, 50);
+      setScore((prev) => prev + 100 + bonus);
+    } else {
+      setStreak(0);
+      handleRecordMistake(currentGame.items[pairIndex] || currentQ.rawItem);
+    }
+  };
+
   const handleGameFinished = () => {
     if (safeIndex < flatQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -134,6 +161,23 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         ? Math.round((correctAnswersCount / totalQuestionsAnswered) * 100)
         : 100;
       
+      saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime, accuracyPercent);
+      setIsFinished(true);
+    }
+  };
+
+  const handleMatchingGameFinished = () => {
+    const matchingQuestions = flatQuestions.filter((q) => q.gameIndex === currentQ.gameIndex);
+    const lastMatchingQ = matchingQuestions[matchingQuestions.length - 1];
+
+    if (lastMatchingQ && lastMatchingQ.questionNumber < flatQuestions.length) {
+      setCurrentQuestionIndex(lastMatchingQ.questionNumber); // advances to first question of next exercise
+    } else {
+      const totalTime = Math.floor((Date.now() - startTime) / 1000);
+      const accuracyPercent = totalQuestionsAnswered > 0
+        ? Math.round((correctAnswersCount / totalQuestionsAnswered) * 100)
+        : 100;
+
       saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime, accuracyPercent);
       setIsFinished(true);
     }
@@ -296,10 +340,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentGame.type === 'matching' && (
           <MatchingEngine
-            key={`q-${currentQ.questionNumber}`}
-            game={singleItemGame}
-            onItemCompleted={handleItemCompleted}
-            onGameFinished={handleGameFinished}
+            key={`matching-game-${currentGame.id}`}
+            game={currentGame}
+            onItemCompleted={() => {}}
+            onGameFinished={handleMatchingGameFinished}
+            onPairCompleted={(pairIndex, isCorrect) => handleMatchingPairCompleted(currentQ, pairIndex, isCorrect)}
           />
         )}
 
