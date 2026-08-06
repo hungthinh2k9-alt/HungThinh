@@ -461,6 +461,113 @@ input, textarea, select {
   border-radius: 20px;
 }
 
+/* Question Palette Bar (1..N) */
+.question-palette-container {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.question-palette-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.question-palette-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.question-palette-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.legend-dot.correct {
+  background: #10b981;
+}
+
+.legend-dot.incorrect {
+  background: #ef4444;
+}
+
+.legend-dot.unanswered {
+  background: #cbd5e1;
+}
+
+.question-palette-grid {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.2rem 0;
+}
+
+.question-pill-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.5rem;
+  border-radius: 10px;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.question-pill-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-primary);
+}
+
+.question-pill-btn.active {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25) !important;
+}
+
+.question-pill-btn.correct {
+  background: #10b981 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.question-pill-btn.incorrect {
+  background: #ef4444 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
 .game-card {
   background: #ffffff;
   border: 1px solid var(--border-color);

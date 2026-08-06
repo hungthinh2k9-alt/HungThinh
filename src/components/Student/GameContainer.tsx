@@ -14,6 +14,14 @@ import { saveStudentLessonProgress } from '../../utils/storage';
 
 const COUNTDOWN_TOTAL_SECONDS = 300; // 5 minutes per lesson
 
+interface QuestionRef {
+  questionNumber: number; // 1..N
+  gameIndex: number;
+  itemIndex: number;
+  game: Game;
+  rawItem: string;
+}
+
 interface GameContainerProps {
   lesson: Lesson;
   lang: Language;
@@ -25,7 +33,22 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   lang,
   onBackToDashboard,
 }) => {
-  const [currentGameIndex, setCurrentGameIndex] = useState(0);
+  // Flatten all items across all games into a sequential questions list (1 to N)
+  const flatQuestions: QuestionRef[] = [];
+  lesson.games.forEach((g, gIdx) => {
+    g.items.forEach((item, iIdx) => {
+      flatQuestions.push({
+        questionNumber: flatQuestions.length + 1,
+        gameIndex: gIdx,
+        itemIndex: iIdx,
+        game: g,
+        rawItem: item,
+      });
+    });
+  });
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'correct' | 'incorrect'>>({});
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -47,7 +70,17 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     return () => clearInterval(interval);
   }, [startTime, isFinished, isReviewingMistakes]);
 
-  const currentGame: Game = lesson.games[currentGameIndex];
+  const safeIndex = Math.min(currentQuestionIndex, flatQuestions.length - 1);
+  const currentQ = flatQuestions[safeIndex] || flatQuestions[0];
+  const currentGame = currentQ.game;
+
+  // Single-item game for current question
+  const singleItemGame: Game = {
+    id: `${currentGame.id}-q${currentQ.questionNumber}`,
+    type: currentGame.type,
+    instruction: currentGame.instruction,
+    items: [currentQ.rawItem],
+  };
 
   // Countdown timer
   const remainingSeconds = Math.max(0, COUNTDOWN_TOTAL_SECONDS - elapsedSeconds);
@@ -67,6 +100,12 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   };
 
   const handleItemCompleted = (isCorrect: boolean) => {
+    const qNum = currentQ.questionNumber;
+    setQuestionStatuses((prev) => ({
+      ...prev,
+      [qNum]: isCorrect ? 'correct' : 'incorrect',
+    }));
+
     setTotalQuestionsAnswered((prev) => prev + 1);
     if (isCorrect) {
       setCorrectAnswersCount((prev) => prev + 1);
@@ -83,8 +122,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   };
 
   const handleGameFinished = () => {
-    if (currentGameIndex < lesson.games.length - 1) {
-      setCurrentGameIndex((prev) => prev + 1);
+    if (safeIndex < flatQuestions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
     } else {
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
       const accuracyPercent = totalQuestionsAnswered > 0
@@ -95,8 +134,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       setIsFinished(true);
     }
   };
-
-
 
   if (isReviewingMistakes) {
     return (
@@ -123,7 +160,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setStartTime(Date.now());
           setElapsedSeconds(0);
           setMissedQuestions([]);
-          setCurrentGameIndex(0);
+          setQuestionStatuses({});
+          setCurrentQuestionIndex(0);
           setStreak(0);
           setMaxStreak(0);
           setScore(0);
@@ -136,7 +174,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     );
   }
 
-  const progressPercent = ((currentGameIndex) / lesson.games.length) * 100;
+  const progressPercent = ((safeIndex + 1) / flatQuestions.length) * 100;
 
   return (
     <div className="game-container-layout">
@@ -150,8 +188,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             <h2 className="lesson-header-title">{lesson.title}</h2>
             <span className="game-type-badge">
               {lang === 'vi' 
-                ? `Phần ${currentGameIndex + 1} / ${lesson.games.length} (${currentGame.items.length} câu hỏi)` 
-                : `Part ${currentGameIndex + 1} of ${lesson.games.length} (${currentGame.items.length} questions)`}
+                ? `Câu ${currentQ.questionNumber} / ${flatQuestions.length}` 
+                : `Question ${currentQ.questionNumber} of ${flatQuestions.length}`}
             </span>
           </div>
         </div>
@@ -196,22 +234,43 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
-      {/* Game Picker Tabs */}
-      <div className="game-picker-container">
-        <div className="picker-tabs">
-          {lesson.games.map((g, idx) => (
-            <button
-              key={g.id || idx}
-              onClick={() => setCurrentGameIndex(idx)}
-              className={`picker-tab ${idx === currentGameIndex ? 'active' : ''}`}
-            >
-              {lang === 'vi' ? `Phần ${idx + 1} (${g.items.length} câu)` : `Part ${idx + 1} (${g.items.length} q's)`}
-            </button>
-          ))}
+      {/* Question Sequential Number Palette Bar */}
+      <div className="question-palette-container">
+        <div className="question-palette-header">
+          <span className="question-palette-label">
+            {lang === 'vi' ? 'Danh sách câu hỏi:' : 'Question List:'}
+          </span>
+          <div className="question-palette-legend">
+            <span className="legend-item">
+              <span className="legend-dot correct" /> {lang === 'vi' ? 'Đúng' : 'Correct'}
+            </span>
+            <span className="legend-item">
+              <span className="legend-dot incorrect" /> {lang === 'vi' ? 'Sai' : 'Incorrect'}
+            </span>
+            <span className="legend-item">
+              <span className="legend-dot unanswered" /> {lang === 'vi' ? 'Chưa làm' : 'Unanswered'}
+            </span>
+          </div>
+        </div>
+
+        <div className="question-palette-grid">
+          {flatQuestions.map((q, idx) => {
+            const status = questionStatuses[q.questionNumber];
+            const isActive = idx === safeIndex;
+            return (
+              <button
+                key={q.questionNumber}
+                onClick={() => setCurrentQuestionIndex(idx)}
+                className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
+              >
+                {q.questionNumber}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Lesson Progress */}
+      {/* Lesson Overall Progress Bar */}
       <div className="progress-bar-track">
         <div
           className="progress-bar-fill"
@@ -223,8 +282,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       <div className="engine-viewport">
         {currentGame.type === 'cloze' && (
           <ClozeEngine
-            key={`game-${currentGame.id}`}
-            game={currentGame}
+            key={`q-${currentQ.questionNumber}`}
+            game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
             onRecordMistake={handleRecordMistake}
@@ -233,8 +292,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentGame.type === 'matching' && (
           <MatchingEngine
-            key={`game-${currentGame.id}`}
-            game={currentGame}
+            key={`q-${currentQ.questionNumber}`}
+            game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
           />
@@ -242,8 +301,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentGame.type === 'sentence_builder' && (
           <SentenceBuilderEngine
-            key={`game-${currentGame.id}`}
-            game={currentGame}
+            key={`q-${currentQ.questionNumber}`}
+            game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
             onRecordMistake={handleRecordMistake}
@@ -252,8 +311,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentGame.type === 'error_spotter' && (
           <ErrorSpotterEngine
-            key={`game-${currentGame.id}`}
-            game={currentGame}
+            key={`q-${currentQ.questionNumber}`}
+            game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
             onRecordMistake={handleRecordMistake}
@@ -262,8 +321,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentGame.type === 'word_scramble' && (
           <WordScrambleEngine
-            key={`game-${currentGame.id}`}
-            game={currentGame}
+            key={`q-${currentQ.questionNumber}`}
+            game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
             onRecordMistake={handleRecordMistake}
