@@ -51,7 +51,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'correct' | 'incorrect'>>({});
-  const [isPaletteExpanded, setIsPaletteExpanded] = useState(true); // Default expanded in desktop card
+  // Default expanded on desktop (>900px), auto-collapsed on mobile (<=900px)
+  const [isPaletteExpanded, setIsPaletteExpanded] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth > 900 : false;
+  });
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -207,7 +210,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setCorrectAnswersCount(0);
           setTotalQuestionsAnswered(0);
           setIsFinished(false);
-          setIsPaletteExpanded(true);
+          setIsPaletteExpanded(typeof window !== 'undefined' ? window.innerWidth > 900 : false);
         }}
         onBackToDashboard={onBackToDashboard}
       />
@@ -218,7 +221,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <div className="game-container-layout">
-      {/* ROW 1: Content Header + Vivid Burning Flame Timer Bar (No outer container) */}
+      {/* ROW 1: Content Header + Vivid Burning Flame Timer Bar */}
       <div className="game-row-top-section">
         <div className="game-top-bar shadow-sm">
           <div className="game-top-left">
@@ -247,6 +250,24 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 <span>{streak}🔥</span>
               </div>
             )}
+
+            {/* Mobile Compact Icon Stats (Shown on mobile inside top bar) */}
+            <span className="mobile-stat-pill correct">
+              <CheckCircle2 size={15} /> {correctCount}
+            </span>
+            <span className="mobile-stat-pill incorrect">
+              <XCircle size={15} /> {incorrectCount}
+            </span>
+
+            {incorrectCount > 0 && (
+              <button
+                className="mobile-mistake-jump-btn"
+                onClick={handleJumpToFirstMistake}
+                title="Sửa câu sai đầu tiên"
+              >
+                <RotateCcw size={15} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -263,9 +284,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
-      {/* ROW 2: Desktop 3-Column Layout (Left: Achievements, Center: Question Engine, Right: Question List) */}
+      {/* ROW 2: 3-Column Layout on Desktop; Single-Column Priority Stack on Mobile */}
       <div className="game-row-three-columns">
-        {/* Left Column: Bảng Thành Tích Card */}
+        {/* Left Column: Bảng Thành Tích Card (Hidden on Mobile) */}
         <div className="stats-sidebar-card shadow-sm">
           <h3 className="sidebar-card-title">
             <Trophy size={18} className="text-amber-500" /> BẢNG THÀNH TÍCH
@@ -312,8 +333,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {/* Center Column: Game Engine Area (Main Content Area) */}
         <div className="game-center-main-column">
-          {/* Lesson Overall Progress Bar */}
-          <div className="progress-bar-track mb-3">
+          {/* Lesson Overall Progress Bar (Shown inside center on desktop) */}
+          <div className="progress-bar-track desktop-only-progress mb-3">
             <div
               className="progress-bar-fill"
               style={{ width: `${progressPercent}%` }}
@@ -369,8 +390,16 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Question List Card */}
+        {/* Right Column (Placed ABOVE game engine on Mobile): Question List Card with surrounding Green Progress Bar */}
         <div className="palette-sidebar-card shadow-sm">
+          {/* Green Overall Progress Bar surrounding Question List */}
+          <div className="progress-bar-track card-embedded-progress mb-2">
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
           <div
             className="question-palette-header clickable"
             onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}

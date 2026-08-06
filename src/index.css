@@ -409,6 +409,54 @@ input, textarea, select {
   100% { background-position: 100% 50%; }
 }
 
+/* Mobile Stat Pills in Header */
+.mobile-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.25rem 0.55rem;
+  border-radius: 16px;
+}
+
+.mobile-stat-pill.correct {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.mobile-stat-pill.incorrect {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.mobile-mistake-jump-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-mistake-jump-btn:hover {
+  background: #fee2e2;
+}
+
+/* Green Progress Bar Embedded / Surrounding Question List Card */
+.progress-bar-track.card-embedded-progress {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
 /* Desktop 3-Column Layout */
 @media (min-width: 901px) {
   .game-row-three-columns {
@@ -416,6 +464,11 @@ input, textarea, select {
     grid-template-columns: 230px 1fr 250px;
     gap: 1.25rem;
     align-items: start;
+  }
+
+  .mobile-stat-pill,
+  .mobile-mistake-jump-btn {
+    display: none !important;
   }
 }
 
@@ -428,32 +481,36 @@ input, textarea, select {
     width: 100%;
   }
 
-  /* Show Game Engine Area FIRST on mobile */
-  .game-center-main-column {
-    order: 1;
-    width: 100%;
-  }
-
-  /* Show Question List Card SECOND on mobile */
+  /* Question List Card placed AT THE TOP ABOVE GAME ENGINE */
   .palette-sidebar-card {
-    order: 2;
+    order: 1 !important;
     width: 100%;
   }
 
-  /* Show Scoreboard / Achievements Card THIRD on mobile */
-  .stats-sidebar-card {
-    order: 3;
+  /* Main Game Engine placed SECOND right under Question List */
+  .game-center-main-column {
+    order: 2 !important;
     width: 100%;
+  }
+
+  /* Left Scoreboard Card is HIDDEN on mobile (stats shown in header icons) */
+  .stats-sidebar-card {
+    display: none !important;
+  }
+
+  /* Desktop-only progress bar hidden on mobile since embedded green bar is inside Question List card */
+  .desktop-only-progress {
+    display: none !important;
   }
 
   .game-top-bar {
     padding: 0.65rem 0.85rem;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .lesson-header-title {
-    max-width: 150px;
-    font-size: 1rem;
+    max-width: 120px;
+    font-size: 0.95rem;
   }
 
   .game-card {
