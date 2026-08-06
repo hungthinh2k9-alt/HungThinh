@@ -262,17 +262,21 @@ input, textarea, select {
    GAME CONTAINER LAYOUT & TOP BAR
    ========================================== */
 
+/* ==========================================
+   GAME CONTAINER LAYOUT (2-ROW, 3-COLUMN DESKTOP)
+   ========================================== */
+
 .game-container-layout {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  width: 100%;
 }
 
-/* Layout Row 1: Top Header Bar & Burning Timer */
-.layout-row-1 {
+.game-row-top-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .game-top-bar {
@@ -316,180 +320,192 @@ input, textarea, select {
   font-weight: 500;
 }
 
-/* Vivid Burning Fire Countdown Timer Bar */
-.countdown-bar-container {
+.game-top-right {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 1rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.burning-fire-container {
-  background: #0f172a;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.15);
-}
-
-.burning-fire-container .countdown-time {
-  color: #fbbf24;
-  font-weight: 800;
-  font-size: 1rem;
-}
-
-.countdown-label {
   flex-shrink: 0;
 }
 
-.countdown-time {
+.score-display {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  border: 1px solid #c7d2fe;
+  border-radius: 24px;
+  padding: 0.35rem 0.85rem;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--accent-primary);
 }
 
-.countdown-time.time-low {
-  color: #dc2626;
-  animation: pulseText 1s ease-in-out infinite;
+.score-icon {
+  color: #f59e0b;
 }
 
-@keyframes pulseText {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.score-value {
+  letter-spacing: -0.5px;
 }
 
-.countdown-track {
-  flex: 1;
-  height: 10px;
-  background: #1e293b;
-  border-radius: 999px;
+.streak-display {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 24px;
+  padding: 0.3rem 0.7rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #ea580c;
+}
+
+.icon-flame {
+  color: #f97316;
+}
+
+/* Vivid Burning Flame Countdown Bar (No outer container / borderless) */
+.burning-flame-bar-wrapper {
+  width: 100%;
+  height: 16px;
+  border-radius: 8px;
+  position: relative;
   overflow: hidden;
+  margin-top: 0.2rem;
 }
 
-.countdown-fill {
+.burning-flame-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-  border-radius: 999px;
-  transition: width 1s linear;
-}
-
-.burning-flame-fill {
-  background: linear-gradient(90deg, #f59e0b, #f97316, #ef4444, #f59e0b);
+  background: linear-gradient(90deg, #ff4500, #ff8c00, #ffd700, #ff4500, #ff8c00);
   background-size: 250% 100%;
-  animation: burningFlame 1.8s linear infinite;
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.8), 0 0 18px rgba(239, 68, 68, 0.6);
+  animation: flameBurn 1.8s ease-in-out infinite alternate;
+  border-radius: 8px;
+  transition: width 1s linear;
+  box-shadow: 0 0 12px rgba(255, 69, 0, 0.7), 0 0 24px rgba(255, 140, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
 }
 
-@keyframes burningFlame {
+.burning-flame-bar.critical {
+  background: linear-gradient(90deg, #dc2626, #ef4444, #f87171, #dc2626);
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.8), 0 0 32px rgba(239, 68, 68, 0.5);
+}
+
+.flame-timer-label {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+}
+
+@keyframes flameBurn {
   0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
-.countdown-fill.low {
-  background: linear-gradient(90deg, #dc2626, #ef4444);
-}
-
-/* Layout Row 2: 3-Column Desktop Grid Layout */
-.layout-row-2-grid {
+/* Row 2: 3 Columns on Desktop, 1 Column on Mobile */
+.game-row-three-columns {
   display: grid;
-  grid-template-columns: 230px 1fr 240px;
+  grid-template-columns: 230px 1fr 250px;
   gap: 1.25rem;
   align-items: start;
 }
 
-.desktop-col-left, .desktop-col-right {
-  position: sticky;
-  top: 80px;
-}
-
-@media (max-width: 992px) {
-  .layout-row-2-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .desktop-col-left, .desktop-col-right {
-    position: static;
-  }
-
-  .desktop-col-left {
-    order: 2;
-  }
-
-  .desktop-col-middle {
-    order: 1;
-  }
-
-  .desktop-col-right {
-    order: 3;
-  }
-}
-
-/* Achievements Card (Col 1) */
-.achievements-card {
+/* Sidebar Cards (Left Stats & Right Question List) */
+.stats-sidebar-card,
+.palette-sidebar-card {
   background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1rem;
-  box-shadow: var(--shadow-sm);
+  padding: 1.1rem 1rem;
 }
 
-.stats-vertical-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.stat-card-item {
+.sidebar-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: var(--radius-md);
-  background: #f8fafc;
-  border: 1px solid var(--border-color);
-  width: 100%;
-  text-align: left;
+  gap: 0.4rem;
 }
 
-.stat-card-text {
+.stats-vertical-list {
   display: flex;
   flex-direction: column;
+  gap: 0.65rem;
 }
 
-.stat-card-label {
-  font-size: 0.75rem;
+.stat-tile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.75rem;
+}
+
+.stat-tile-label {
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
 }
 
-.stat-card-value {
+.stat-tile-value {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: var(--text-main);
 }
 
-.mistake-jump-card {
-  cursor: pointer;
+.stat-tile-value.score {
+  color: var(--accent-primary);
+}
+
+.stat-tile-value.streak {
+  color: #ea580c;
+}
+
+.stat-tile.streak-highlight {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.btn-jump-mistakes-first {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
   background: #fef2f2;
-  border-color: #fecaca;
-  transition: transform 0.15s ease;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.mistake-jump-card:hover {
-  transform: translateY(-2px);
+.btn-jump-mistakes-first:hover {
   background: #fee2e2;
+  transform: translateY(-1px);
 }
 
-/* ==========================================
-   PROGRESS BAR
-   ========================================== */
+.game-center-main-column {
+  display: flex;
+  flex-direction: column;
+}
 
+/* Progressive & Engine Viewport */
 .progress-bar-track {
   height: 6px;
   background: #e2e8f0;
@@ -504,13 +520,10 @@ input, textarea, select {
   transition: width 0.5s ease;
 }
 
-/* ==========================================
-   ENGINE VIEWPORT (Game Card Container)
-   ========================================== */
-
 .engine-viewport {
   margin-top: 0.5rem;
 }
+
 .total-questions-badge {
   display: inline-flex;
   align-items: center;

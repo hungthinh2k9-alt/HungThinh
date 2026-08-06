@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Lesson, Game, MissedQuestion } from '../../types/lesson';
+import type { Lesson, Game } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { ClozeEngine } from './ClozeEngine';
@@ -8,7 +8,7 @@ import { SentenceBuilderEngine } from './SentenceBuilderEngine';
 import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
 import { LessonSummary } from './LessonSummary';
-import { Flame, Trophy, ArrowLeft, RotateCcw, ChevronDown, ChevronUp, Award } from 'lucide-react';
+import { Flame, Trophy, ArrowLeft, RotateCcw, ChevronDown, ChevronUp, CheckCircle2, XCircle } from 'lucide-react';
 import { saveStudentLessonProgress } from '../../utils/storage';
 
 const COUNTDOWN_TOTAL_SECONDS = 300; // 5 minutes per lesson
@@ -51,7 +51,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'correct' | 'incorrect'>>({});
-  const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
+  const [isPaletteExpanded, setIsPaletteExpanded] = useState(true); // Default expanded in desktop card
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -60,7 +60,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [, setMissedQuestions] = useState<MissedQuestion[]>([]);
 
   const t = translations[lang];
 
@@ -91,18 +90,22 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const countdownSecs = remainingSeconds % 60;
   const isTimeRunningLow = remainingSeconds < 60;
 
-  // Count incorrect answers
-  const incorrectCount = Object.values(questionStatuses).filter((s) => s === 'incorrect').length;
+  // Counts of correct & incorrect answers
   const correctCount = Object.values(questionStatuses).filter((s) => s === 'correct').length;
+  const incorrectCount = Object.values(questionStatuses).filter((s) => s === 'incorrect').length;
 
-  const handleRecordMistake = (rawItem: string) => {
-    const newMissed: MissedQuestion = {
-      id: `m-${Date.now()}-${Math.random()}`,
-      gameType: currentGame.type,
-      gameInstruction: currentGame.instruction,
-      rawItem,
-    };
-    setMissedQuestions((prev) => [...prev, newMissed]);
+  // Jump to the first incorrect question when requested
+  const handleJumpToFirstMistake = () => {
+    const firstIncorrectQNum = flatQuestions.find(
+      (q) => questionStatuses[q.questionNumber] === 'incorrect'
+    )?.questionNumber;
+
+    if (firstIncorrectQNum !== undefined) {
+      const targetIdx = flatQuestions.findIndex((q) => q.questionNumber === firstIncorrectQNum);
+      if (targetIdx !== -1) {
+        setCurrentQuestionIndex(targetIdx);
+      }
+    }
   };
 
   const handleItemCompleted = (isCorrect: boolean) => {
@@ -150,7 +153,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       setScore((prev) => prev + 100 + bonus);
     } else {
       setStreak(0);
-      handleRecordMistake(currentGame.items[pairIndex] || currentQ.rawItem);
     }
   };
 
@@ -173,7 +175,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     const lastMatchingQ = matchingQuestions[matchingQuestions.length - 1];
 
     if (lastMatchingQ && lastMatchingQ.questionNumber < flatQuestions.length) {
-      setCurrentQuestionIndex(lastMatchingQ.questionNumber); // advances to first question of next exercise
+      setCurrentQuestionIndex(lastMatchingQ.questionNumber);
     } else {
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
       const accuracyPercent = totalQuestionsAnswered > 0
@@ -182,17 +184,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
       saveStudentLessonProgress(lesson.lesson_id, score, lesson.games.length, totalTime, accuracyPercent);
       setIsFinished(true);
-    }
-  };
-
-  // Jump to first incorrect question
-  const handleJumpToFirstMistake = () => {
-    const firstWrongQ = flatQuestions.find((q) => questionStatuses[q.questionNumber] === 'incorrect');
-    if (firstWrongQ) {
-      const wrongIdx = flatQuestions.findIndex((q) => q.questionNumber === firstWrongQ.questionNumber);
-      if (wrongIdx !== -1) {
-        setCurrentQuestionIndex(wrongIdx);
-      }
     }
   };
 
@@ -208,7 +199,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         onRestart={() => {
           setStartTime(Date.now());
           setElapsedSeconds(0);
-          setMissedQuestions([]);
           setQuestionStatuses({});
           setCurrentQuestionIndex(0);
           setStreak(0);
@@ -217,7 +207,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setCorrectAnswersCount(0);
           setTotalQuestionsAnswered(0);
           setIsFinished(false);
-          setIsPaletteExpanded(false);
+          setIsPaletteExpanded(true);
         }}
         onBackToDashboard={onBackToDashboard}
       />
@@ -228,9 +218,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <div className="game-container-layout">
-      {/* ROW 1: Header Bar & Vivid Burning Countdown Timer */}
-      <div className="layout-row-1">
-        <div className="game-top-bar">
+      {/* ROW 1: Content Header + Vivid Burning Flame Timer Bar (No outer container) */}
+      <div className="game-row-top-section">
+        <div className="game-top-bar shadow-sm">
           <div className="game-top-left">
             <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
               <ArrowLeft size={20} />
@@ -244,81 +234,85 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               </span>
             </div>
           </div>
+
+          <div className="game-top-right">
+            <div className="score-display">
+              <Trophy size={18} className="score-icon" />
+              <span className="score-value">{score}</span>
+            </div>
+
+            {streak > 0 && (
+              <div className="streak-display animate-bounce-subtle">
+                <Flame size={16} className="icon-flame" />
+                <span>{streak}🔥</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Vivid Burning Fire Countdown Timer Bar */}
-        <div className="countdown-bar-container burning-fire-container">
-          <div className="countdown-label">
-            <span className={`countdown-time ${isTimeRunningLow ? 'time-low' : ''}`}>
+        {/* Borderless Vivid Burning Flame Timer Bar */}
+        <div className="burning-flame-bar-wrapper">
+          <div
+            className={`burning-flame-bar ${isTimeRunningLow ? 'critical' : ''}`}
+            style={{ width: `${countdownPercent}%` }}
+          >
+            <span className="flame-timer-label">
               🔥 {countdownMinutes}:{countdownSecs < 10 ? '0' : ''}{countdownSecs}
             </span>
-          </div>
-          <div className="countdown-track">
-            <div
-              className={`countdown-fill burning-flame-fill ${isTimeRunningLow ? 'low' : ''}`}
-              style={{ width: `${countdownPercent}%` }}
-            />
           </div>
         </div>
       </div>
 
-      {/* ROW 2: 3-Column Desktop Grid Layout */}
-      <div className="layout-row-2-grid">
-        {/* COL 1 (LEFT - Small): Bảng Thành Tích Card */}
-        <div className="desktop-col-left">
-          <div className="achievements-card shadow-sm">
-            <h3 className="card-section-title text-center mb-3">
-              {lang === 'vi' ? 'Bảng Thành Tích' : 'Achievements'}
-            </h3>
-            
-            <div className="stats-vertical-stack">
-              {/* Score */}
-              <div className="stat-card-item score-card">
-                <Trophy size={20} className="score-icon" />
-                <div className="stat-card-text">
-                  <span className="stat-card-label">{lang === 'vi' ? 'Điểm số' : 'Score'}</span>
-                  <span className="stat-card-value">{score}</span>
-                </div>
-              </div>
-
-              {/* Streak */}
-              <div className="stat-card-item streak-card">
-                <Flame size={20} className="icon-flame" />
-                <div className="stat-card-text">
-                  <span className="stat-card-label">{lang === 'vi' ? 'Chuỗi đúng' : 'Streak'}</span>
-                  <span className="stat-card-value">{streak} 🔥</span>
-                </div>
-              </div>
-
-              {/* Incorrect / Jump to First Mistake Button */}
-              {incorrectCount > 0 && (
-                <button
-                  className="stat-card-item mistake-jump-card animate-pulse"
-                  onClick={handleJumpToFirstMistake}
-                  title={lang === 'vi' ? 'Nhảy về câu sai đầu tiên' : 'Jump to 1st mistake'}
-                >
-                  <RotateCcw size={18} className="text-red-500" />
-                  <div className="stat-card-text">
-                    <span className="stat-card-label">{lang === 'vi' ? 'Lỗi sai' : 'Mistakes'}</span>
-                    <span className="stat-card-value text-red-600">{incorrectCount} câu (Sửa lại)</span>
-                  </div>
-                </button>
-              )}
-
-              {/* Correct Count */}
-              <div className="stat-card-item accuracy-card">
-                <Award size={20} className="text-emerald-500" />
-                <div className="stat-card-text">
-                  <span className="stat-card-label">{lang === 'vi' ? 'Đã làm đúng' : 'Correct'}</span>
-                  <span className="stat-card-value text-emerald-600">{correctCount} / {flatQuestions.length}</span>
-                </div>
-              </div>
+      {/* ROW 2: Desktop 3-Column Layout (Left: Achievements, Center: Question Engine, Right: Question List) */}
+      <div className="game-row-three-columns">
+        {/* Left Column: Bảng Thành Tích Card */}
+        <div className="stats-sidebar-card shadow-sm">
+          <h3 className="sidebar-card-title">
+            <Trophy size={18} className="text-amber-500" /> BẢNG THÀNH TÍCH
+          </h3>
+          
+          <div className="stats-vertical-list mt-3">
+            <div className="stat-tile">
+              <span className="stat-tile-label">{t.pts}</span>
+              <span className="stat-tile-value score">{score}</span>
             </div>
+
+            {streak > 0 && (
+              <div className="stat-tile streak-highlight animate-bounce-subtle">
+                <span className="stat-tile-label">{t.streak}</span>
+                <span className="stat-tile-value streak">{streak} 🔥</span>
+              </div>
+            )}
+
+            <div className="stat-tile">
+              <span className="stat-tile-label">Câu đúng</span>
+              <span className="stat-tile-value correct flex items-center gap-1">
+                <CheckCircle2 size={16} className="text-emerald-500" /> {correctCount}
+              </span>
+            </div>
+
+            <div className="stat-tile">
+              <span className="stat-tile-label">Câu sai</span>
+              <span className="stat-tile-value incorrect flex items-center gap-1">
+                <XCircle size={16} className="text-rose-500" /> {incorrectCount}
+              </span>
+            </div>
+
+            {incorrectCount > 0 && (
+              <button
+                className="btn-jump-mistakes-first mt-3"
+                onClick={handleJumpToFirstMistake}
+                title="Sửa câu sai đầu tiên"
+              >
+                <RotateCcw size={15} /> Sửa câu sai đầu tiên
+              </button>
+            )}
           </div>
         </div>
 
-        {/* COL 2 (MIDDLE - Main/Large): Phần Làm Bài (Engine View) */}
-        <div className="desktop-col-middle">
+        {/* Center Column: Game Engine Area (Main Content Area) */}
+        <div className="game-center-main-column">
+          {/* Lesson Overall Progress Bar */}
           <div className="progress-bar-track mb-3">
             <div
               className="progress-bar-fill"
@@ -333,7 +327,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 game={singleItemGame}
                 onItemCompleted={handleItemCompleted}
                 onGameFinished={handleGameFinished}
-                onRecordMistake={handleRecordMistake}
               />
             )}
 
@@ -353,7 +346,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 game={singleItemGame}
                 onItemCompleted={handleItemCompleted}
                 onGameFinished={handleGameFinished}
-                onRecordMistake={handleRecordMistake}
               />
             )}
 
@@ -363,7 +355,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 game={singleItemGame}
                 onItemCompleted={handleItemCompleted}
                 onGameFinished={handleGameFinished}
-                onRecordMistake={handleRecordMistake}
               />
             )}
 
@@ -373,47 +364,44 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 game={singleItemGame}
                 onItemCompleted={handleItemCompleted}
                 onGameFinished={handleGameFinished}
-                onRecordMistake={handleRecordMistake}
               />
             )}
           </div>
         </div>
 
-        {/* COL 3 (RIGHT - Small): DANH SÁCH CÂU HỎI Card */}
-        <div className="desktop-col-right">
-          <div className="question-palette-container">
-            <div
-              className="question-palette-header clickable"
-              onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
-            >
-              <span className="question-palette-title-text">DANH SÁCH CÂU HỎI</span>
-              <div className="palette-arrow-icon">
-                {isPaletteExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        {/* Right Column: Question List Card */}
+        <div className="palette-sidebar-card shadow-sm">
+          <div
+            className="question-palette-header clickable"
+            onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+          >
+            <span className="question-palette-title-text">DANH SÁCH CÂU HỎI</span>
+            <div className="palette-arrow-icon">
+              {isPaletteExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+          </div>
+
+          {isPaletteExpanded && (
+            <div className="expanded-palette-content animate-slide-up mt-3">
+              <div className="question-palette-grid-wrapped">
+                {flatQuestions.map((q, idx) => {
+                  const status = questionStatuses[q.questionNumber];
+                  const isActive = idx === safeIndex;
+                  return (
+                    <button
+                      key={q.questionNumber}
+                      onClick={() => {
+                        setCurrentQuestionIndex(idx);
+                      }}
+                      className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
+                    >
+                      {q.questionNumber}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            {isPaletteExpanded && (
-              <div className="expanded-palette-content animate-slide-up mt-3">
-                <div className="question-palette-grid-wrapped">
-                  {flatQuestions.map((q, idx) => {
-                    const status = questionStatuses[q.questionNumber];
-                    const isActive = idx === safeIndex;
-                    return (
-                      <button
-                        key={q.questionNumber}
-                        onClick={() => {
-                          setCurrentQuestionIndex(idx);
-                        }}
-                        className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
-                      >
-                        {q.questionNumber}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
