@@ -477,7 +477,10 @@ input, textarea, select {
   cursor: pointer;
   user-select: none;
   border-radius: var(--radius-sm);
-  padding: 0.2rem 0.4rem;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   transition: background-color 0.15s ease;
 }
 
@@ -485,79 +488,25 @@ input, textarea, select {
   background-color: #f1f5f9;
 }
 
-.palette-title-group {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.compact-status-summary {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.palette-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--accent-primary);
-}
-
-.toggle-hint-text {
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-/* Mini Palette Preview Row (Collapsed Mode) */
-.mini-palette-preview {
-  display: flex;
-  gap: 0.3rem;
-  overflow-x: auto;
-  padding: 0.15rem 0;
-  cursor: pointer;
-}
-
-.mini-pill {
-  min-width: 26px;
-  height: 26px;
-  padding: 0 0.35rem;
-  border-radius: 6px;
+.question-palette-title-text {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
   color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+.palette-arrow-icon {
+  color: var(--accent-primary);
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
 }
 
-.mini-pill.active {
-  border-color: var(--accent-primary) !important;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25) !important;
-}
-
-.mini-pill.correct {
-  background: #10b981 !important;
-  border-color: #059669 !important;
-  color: #ffffff !important;
-}
-
-.mini-pill.incorrect {
-  background: #ef4444 !important;
-  border-color: #dc2626 !important;
-  color: #ffffff !important;
-}
-
-.question-palette-grid {
+.question-palette-grid-wrapped {
   display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  padding: 0.2rem 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
 }
 
 .question-pill-btn {
