@@ -9,7 +9,7 @@ import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
 import { LessonSummary } from './LessonSummary';
 import { MistakesReview } from './MistakesReview';
-import { Flame, Trophy, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Flame, Trophy, ArrowLeft, RotateCcw, ChevronDown, ChevronUp, List } from 'lucide-react';
 import { saveStudentLessonProgress } from '../../utils/storage';
 
 const COUNTDOWN_TOTAL_SECONDS = 300; // 5 minutes per lesson
@@ -49,6 +49,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'correct' | 'incorrect'>>({});
+  const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -88,6 +89,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const countdownMinutes = Math.floor(remainingSeconds / 60);
   const countdownSecs = remainingSeconds % 60;
   const isTimeRunningLow = remainingSeconds < 60;
+
+  // Question stats summary for header
+  const correctCount = Object.values(questionStatuses).filter((s) => s === 'correct').length;
+  const incorrectCount = Object.values(questionStatuses).filter((s) => s === 'incorrect').length;
 
   const handleRecordMistake = (rawItem: string) => {
     const newMissed: MissedQuestion = {
@@ -168,6 +173,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           setCorrectAnswersCount(0);
           setTotalQuestionsAnswered(0);
           setIsFinished(false);
+          setIsPaletteExpanded(false);
         }}
         onBackToDashboard={onBackToDashboard}
       />
@@ -234,40 +240,92 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
-      {/* Question Sequential Number Palette Bar */}
-      <div className="question-palette-container">
-        <div className="question-palette-header">
-          <span className="question-palette-label">
-            {lang === 'vi' ? 'Danh sách câu hỏi:' : 'Question List:'}
-          </span>
-          <div className="question-palette-legend">
-            <span className="legend-item">
-              <span className="legend-dot correct" /> {lang === 'vi' ? 'Đúng' : 'Correct'}
+      {/* Collapsible Question Palette Card */}
+      <div className={`question-palette-container ${isPaletteExpanded ? 'expanded' : 'collapsed'}`}>
+        <div
+          className="question-palette-header clickable"
+          onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+          title={isPaletteExpanded ? 'Thu gọn danh sách câu hỏi' : 'Mở rộng danh sách câu hỏi'}
+        >
+          <div className="palette-title-group">
+            <List size={16} className="text-indigo-600" />
+            <span className="question-palette-label">
+              {lang === 'vi'
+                ? `Danh sách câu hỏi (${flatQuestions.length} câu)`
+                : `Questions List (${flatQuestions.length})`}
             </span>
-            <span className="legend-item">
-              <span className="legend-dot incorrect" /> {lang === 'vi' ? 'Sai' : 'Incorrect'}
+            <span className="compact-status-summary">
+              · {correctCount} ✅ {incorrectCount} ❌
             </span>
-            <span className="legend-item">
-              <span className="legend-dot unanswered" /> {lang === 'vi' ? 'Chưa làm' : 'Unanswered'}
+          </div>
+
+          <div className="palette-header-right">
+            <span className="toggle-hint-text">
+              {isPaletteExpanded
+                ? (lang === 'vi' ? 'Thu gọn' : 'Collapse')
+                : (lang === 'vi' ? 'Xem tất cả' : 'Expand all')}
             </span>
+            {isPaletteExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </div>
         </div>
 
-        <div className="question-palette-grid">
-          {flatQuestions.map((q, idx) => {
-            const status = questionStatuses[q.questionNumber];
-            const isActive = idx === safeIndex;
-            return (
-              <button
-                key={q.questionNumber}
-                onClick={() => setCurrentQuestionIndex(idx)}
-                className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
-              >
-                {q.questionNumber}
-              </button>
-            );
-          })}
-        </div>
+        {/* Collapsed mini preview row */}
+        {!isPaletteExpanded && (
+          <div
+            className="mini-palette-preview mt-2"
+            onClick={() => setIsPaletteExpanded(true)}
+          >
+            {flatQuestions.map((q, idx) => {
+              const status = questionStatuses[q.questionNumber];
+              const isActive = idx === safeIndex;
+              return (
+                <span
+                  key={q.questionNumber}
+                  className={`mini-pill ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
+                  title={`Câu ${q.questionNumber}`}
+                >
+                  {q.questionNumber}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Expanded full grid & legend */}
+        {isPaletteExpanded && (
+          <div className="expanded-palette-content animate-slide-up mt-2">
+            <div className="question-palette-legend mb-3">
+              <span className="legend-item">
+                <span className="legend-dot correct" /> {lang === 'vi' ? 'Đúng' : 'Correct'}
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot incorrect" /> {lang === 'vi' ? 'Sai' : 'Incorrect'}
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot unanswered" /> {lang === 'vi' ? 'Chưa làm' : 'Unanswered'}
+              </span>
+            </div>
+
+            <div className="question-palette-grid">
+              {flatQuestions.map((q, idx) => {
+                const status = questionStatuses[q.questionNumber];
+                const isActive = idx === safeIndex;
+                return (
+                  <button
+                    key={q.questionNumber}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentQuestionIndex(idx);
+                    }}
+                    className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
+                  >
+                    {q.questionNumber}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Lesson Overall Progress Bar */}
