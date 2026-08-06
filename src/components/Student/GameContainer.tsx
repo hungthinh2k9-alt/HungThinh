@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Lesson, Game, MissedQuestion } from '../../types/lesson';
+import type { Lesson, Game } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { ClozeEngine } from './ClozeEngine';
@@ -8,7 +8,6 @@ import { SentenceBuilderEngine } from './SentenceBuilderEngine';
 import { ErrorSpotterEngine } from './ErrorSpotterEngine';
 import { WordScrambleEngine } from './WordScrambleEngine';
 import { LessonSummary } from './LessonSummary';
-import { MistakesReview } from './MistakesReview';
 import { Flame, Trophy, ArrowLeft, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { saveStudentLessonProgress } from '../../utils/storage';
 
@@ -61,22 +60,26 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [missedQuestions, setMissedQuestions] = useState<MissedQuestion[]>([]);
-  const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
 
   const t = translations[lang];
 
   useEffect(() => {
-    if (isFinished || isReviewingMistakes) return;
+    if (isFinished) return;
     const interval = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, [startTime, isFinished, isReviewingMistakes]);
+  }, [startTime, isFinished]);
 
   const safeIndex = Math.min(currentQuestionIndex, flatQuestions.length - 1);
   const currentQ = flatQuestions[safeIndex] || flatQuestions[0];
   const currentGame = currentQ.game;
+
+  // Find index of first incorrect (red) question for retry button
+  const firstWrongIndex = flatQuestions.findIndex(
+    (q) => questionStatuses[q.questionNumber] === 'incorrect'
+  );
+  const incorrectCount = Object.values(questionStatuses).filter((s) => s === 'incorrect').length;
 
   // Single-item game for current question (non-matching)
   const singleItemGame: Game = useMemo(() => ({
@@ -92,16 +95,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const countdownMinutes = Math.floor(remainingSeconds / 60);
   const countdownSecs = remainingSeconds % 60;
   const isTimeRunningLow = remainingSeconds < 60;
-
-  const handleRecordMistake = (rawItem: string) => {
-    const newMissed: MissedQuestion = {
-      id: `m-${Date.now()}-${Math.random()}`,
-      gameType: currentGame.type,
-      gameInstruction: currentGame.instruction,
-      rawItem,
-    };
-    setMissedQuestions((prev) => [...prev, newMissed]);
-  };
 
   const handleItemCompleted = (isCorrect: boolean) => {
     const qNum = currentQ.questionNumber;
@@ -148,7 +141,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       setScore((prev) => prev + 100 + bonus);
     } else {
       setStreak(0);
-      handleRecordMistake(currentGame.items[pairIndex] || currentQ.rawItem);
     }
   };
 
@@ -171,7 +163,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     const lastMatchingQ = matchingQuestions[matchingQuestions.length - 1];
 
     if (lastMatchingQ && lastMatchingQ.questionNumber < flatQuestions.length) {
-      setCurrentQuestionIndex(lastMatchingQ.questionNumber); // advances to first question of next exercise
+      setCurrentQuestionIndex(lastMatchingQ.questionNumber);
     } else {
       const totalTime = Math.floor((Date.now() - startTime) / 1000);
       const accuracyPercent = totalQuestionsAnswered > 0
@@ -182,18 +174,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       setIsFinished(true);
     }
   };
-
-  if (isReviewingMistakes) {
-    return (
-      <MistakesReview
-        missedQuestions={missedQuestions}
-        lang={lang}
-        onBack={() => setIsReviewingMistakes(false)}
-        onClearMistakes={() => setMissedQuestions([])}
-        onBackToDashboard={onBackToDashboard}
-      />
-    );
-  }
 
   if (isFinished) {
     return (
@@ -207,7 +187,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         onRestart={() => {
           setStartTime(Date.now());
           setElapsedSeconds(0);
-          setMissedQuestions([]);
           setQuestionStatuses({});
           setCurrentQuestionIndex(0);
           setStreak(0);
@@ -227,99 +206,108 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <div className="game-container-layout">
-      {/* Top bar: back + title on left, score on right */}
-      <div className="game-top-bar">
-        <div className="game-top-left">
-          <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
-            <ArrowLeft size={20} />
-          </button>
-          <div className="header-info">
-            <h2 className="lesson-header-title">{lesson.title}</h2>
-            <span className="game-type-badge">
-              {lang === 'vi' 
-                ? `Câu ${currentQ.questionNumber} / ${flatQuestions.length}` 
-                : `Question ${currentQ.questionNumber} of ${flatQuestions.length}`}
-            </span>
-          </div>
-        </div>
-
-        <div className="game-top-right">
-          <div className="score-display">
-            <Trophy size={18} className="score-icon" />
-            <span className="score-value">{score}</span>
-          </div>
-
-          {streak > 0 && (
-            <div className="streak-display animate-bounce-subtle">
-              <Flame size={16} className="icon-flame" />
-              <span>{streak}🔥</span>
+      {/* Side-by-Side 2-Card Desktop Grid (Left: Bảng Thành Tích, Right: Danh Sách Câu Hỏi) */}
+      <div className="game-stats-palette-grid">
+        {/* Left Card: Bảng Thành Tích */}
+        <div className="stats-board-card shadow-sm">
+          <div className="stats-card-header">
+            <button className="btn-icon" onClick={onBackToDashboard} title={t.backToTopics}>
+              <ArrowLeft size={18} />
+            </button>
+            <div className="header-info">
+              <h2 className="lesson-header-title">{lesson.title}</h2>
+              <span className="game-type-badge">
+                {lang === 'vi' 
+                  ? `Câu ${currentQ.questionNumber} / ${flatQuestions.length}` 
+                  : `Question ${currentQ.questionNumber} of ${flatQuestions.length}`}
+              </span>
             </div>
-          )}
+          </div>
 
-          {missedQuestions.length > 0 && (
+          <div className="stats-metrics-row mt-3">
+            <div className="metric-box score">
+              <Trophy size={20} className="metric-icon gold" />
+              <div className="metric-info">
+                <span className="metric-label">{lang === 'vi' ? 'Điểm số' : 'Score'}</span>
+                <span className="metric-value">{score}</span>
+              </div>
+            </div>
+
+            <div className="metric-box streak">
+              <Flame size={20} className="metric-icon orange" />
+              <div className="metric-info">
+                <span className="metric-label">{lang === 'vi' ? 'Chuỗi đúng' : 'Streak'}</span>
+                <span className="metric-value">{streak} 🔥</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Countdown Timer */}
+          <div className="countdown-section mt-3">
+            <div className="countdown-text-row">
+              <span className="countdown-title">{lang === 'vi' ? 'Thời gian' : 'Time Left'}</span>
+              <span className={`countdown-time ${isTimeRunningLow ? 'time-low' : ''}`}>
+                {countdownMinutes}:{countdownSecs < 10 ? '0' : ''}{countdownSecs}
+              </span>
+            </div>
+            <div className="countdown-track mt-1">
+              <div
+                className={`countdown-fill ${isTimeRunningLow ? 'low' : ''}`}
+                style={{ width: `${countdownPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Retry first wrong question button */}
+          {firstWrongIndex !== -1 && (
             <button
-              className="mistakes-btn"
-              onClick={() => setIsReviewingMistakes(true)}
-              title={t.reviewMistakes}
+              className="jump-wrong-btn mt-3 animate-pulse"
+              onClick={() => setCurrentQuestionIndex(firstWrongIndex)}
             >
-              <RotateCcw size={14} /> {missedQuestions.length}
+              <RotateCcw size={15} />
+              <span>{lang === 'vi' ? `Làm lại câu sai (${incorrectCount})` : `Retry Missed (${incorrectCount})`}</span>
             </button>
           )}
         </div>
-      </div>
 
-      {/* Countdown Timer Bar */}
-      <div className="countdown-bar-container">
-        <div className="countdown-label">
-          <span className={`countdown-time ${isTimeRunningLow ? 'time-low' : ''}`}>
-            {countdownMinutes}:{countdownSecs < 10 ? '0' : ''}{countdownSecs}
-          </span>
-        </div>
-        <div className="countdown-track">
+        {/* Right Card: DANH SÁCH CÂU HỎI */}
+        <div className="question-palette-container shadow-sm">
           <div
-            className={`countdown-fill ${isTimeRunningLow ? 'low' : ''}`}
-            style={{ width: `${countdownPercent}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Collapsible Question List Card — Clean Text & Arrow Only */}
-      <div className="question-palette-container">
-        <div
-          className="question-palette-header clickable"
-          onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
-        >
-          <span className="question-palette-title-text">DANH SÁCH CÂU HỎI</span>
-          <div className="palette-arrow-icon">
-            {isPaletteExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </div>
-        </div>
-
-        {isPaletteExpanded && (
-          <div className="expanded-palette-content animate-slide-up mt-3">
-            <div className="question-palette-grid-wrapped">
-              {flatQuestions.map((q, idx) => {
-                const status = questionStatuses[q.questionNumber];
-                const isActive = idx === safeIndex;
-                return (
-                  <button
-                    key={q.questionNumber}
-                    onClick={() => {
-                      setCurrentQuestionIndex(idx);
-                    }}
-                    className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
-                  >
-                    {q.questionNumber}
-                  </button>
-                );
-              })}
+            className="question-palette-header clickable"
+            onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+          >
+            <span className="question-palette-title-text">DANH SÁCH CÂU HỎI</span>
+            <div className="palette-arrow-icon">
+              {isPaletteExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </div>
           </div>
-        )}
+
+          {isPaletteExpanded && (
+            <div className="expanded-palette-content animate-slide-up mt-3">
+              <div className="question-palette-grid-wrapped">
+                {flatQuestions.map((q, idx) => {
+                  const status = questionStatuses[q.questionNumber];
+                  const isActive = idx === safeIndex;
+                  return (
+                    <button
+                      key={q.questionNumber}
+                      onClick={() => {
+                        setCurrentQuestionIndex(idx);
+                      }}
+                      className={`question-pill-btn ${isActive ? 'active' : ''} ${status || 'unanswered'}`}
+                    >
+                      {q.questionNumber}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Lesson Overall Progress Bar */}
-      <div className="progress-bar-track">
+      <div className="progress-bar-track mt-3">
         <div
           className="progress-bar-fill"
           style={{ width: `${progressPercent}%` }}
@@ -327,14 +315,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       </div>
 
       {/* Game Engine View */}
-      <div className="engine-viewport">
+      <div className="engine-viewport mt-3">
         {currentGame.type === 'cloze' && (
           <ClozeEngine
             key={`q-${currentQ.questionNumber}`}
             game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
-            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -354,7 +341,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
-            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -364,7 +350,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
-            onRecordMistake={handleRecordMistake}
           />
         )}
 
@@ -374,7 +359,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             game={singleItemGame}
             onItemCompleted={handleItemCompleted}
             onGameFinished={handleGameFinished}
-            onRecordMistake={handleRecordMistake}
           />
         )}
       </div>

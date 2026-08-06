@@ -268,6 +268,127 @@ input, textarea, select {
   gap: 1rem;
 }
 
+/* Side-by-Side 2-Card Grid Layout (Desktop: Left Stats Card, Right Question List Card) */
+.game-stats-palette-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .game-stats-palette-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.stats-board-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.stats-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.stats-metrics-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.metric-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+}
+
+.metric-box.score {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.metric-box.streak {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.metric-icon.gold {
+  color: #f59e0b;
+}
+
+.metric-icon.orange {
+  color: #ea580c;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.metric-value {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.countdown-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.countdown-text-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.countdown-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.jump-wrong-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.jump-wrong-btn:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+}
+
 .game-top-bar {
   display: flex;
   justify-content: space-between;
