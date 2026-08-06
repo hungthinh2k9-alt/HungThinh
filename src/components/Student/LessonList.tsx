@@ -3,7 +3,7 @@ import type { Lesson } from '../../types/lesson';
 import type { Language } from '../../utils/i18n';
 import { translations } from '../../utils/i18n';
 import { getStoredProgress } from '../../utils/storage';
-import { Play, Search, Trophy, CheckCircle2, Clock, Layers, Star } from 'lucide-react';
+import { Play, Search, Trophy, CheckCircle2, Clock, Layers, Star, HelpCircle } from 'lucide-react';
 
 interface LessonListProps {
   lessons: Lesson[];
@@ -102,17 +102,19 @@ export const LessonList: React.FC<LessonListProps> = ({
                 )}
               </div>
 
-              <div className="game-types-tags mt-3">
-                {lesson.games.map((g, idx) => (
-                  <span key={idx} className="game-type-tag">
-                    {g.type === 'cloze' && t.clozeLabel}
-                    {g.type === 'matching' && t.matchingLabel}
-                    {g.type === 'sentence_builder' && t.sentenceLabel}
-                    {g.type === 'error_spotter' && t.errorSpotterLabel}
-                    {g.type === 'word_scramble' && t.wordScrambleLabel}
-                  </span>
-                ))}
-              </div>
+              {(() => {
+                const totalQuestions = lesson.games.reduce((acc, g) => acc + g.items.length, 0);
+                return (
+                  <div className="total-questions-badge mt-3">
+                    <HelpCircle size={15} className="text-indigo-600" />
+                    <span>
+                      {lang === 'vi' 
+                        ? `Tổng số ${totalQuestions} câu hỏi` 
+                        : `Total ${totalQuestions} questions`}
+                    </span>
+                  </div>
+                );
+              })()}
 
               <div className="lesson-card-footer mt-4">
                 <button

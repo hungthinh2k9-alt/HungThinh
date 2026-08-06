@@ -96,16 +96,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     }
   };
 
-  const getGameTypeLabel = (type: string) => {
-    switch (type) {
-      case 'cloze': return t.clozeLabel;
-      case 'matching': return t.matchingLabel;
-      case 'sentence_builder': return t.sentenceLabel;
-      case 'error_spotter': return t.errorSpotterLabel;
-      case 'word_scramble': return t.wordScrambleLabel;
-      default: return type;
-    }
-  };
+
 
   if (isReviewingMistakes) {
     return (
@@ -158,7 +149,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <div className="header-info">
             <h2 className="lesson-header-title">{lesson.title}</h2>
             <span className="game-type-badge">
-              {lang === 'vi' ? `Bài ${currentGameIndex + 1} / ${lesson.games.length}` : `${currentGameIndex + 1} / ${lesson.games.length}`} · {getGameTypeLabel(currentGame.type)}
+              {lang === 'vi' 
+                ? `Phần ${currentGameIndex + 1} / ${lesson.games.length} (${currentGame.items.length} câu hỏi)` 
+                : `Part ${currentGameIndex + 1} of ${lesson.games.length} (${currentGame.items.length} questions)`}
             </span>
           </div>
         </div>
@@ -212,7 +205,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               onClick={() => setCurrentGameIndex(idx)}
               className={`picker-tab ${idx === currentGameIndex ? 'active' : ''}`}
             >
-              {idx + 1}. {getGameTypeLabel(g.type)}
+              {lang === 'vi' ? `Phần ${idx + 1} (${g.items.length} câu)` : `Part ${idx + 1} (${g.items.length} q's)`}
             </button>
           ))}
         </div>
