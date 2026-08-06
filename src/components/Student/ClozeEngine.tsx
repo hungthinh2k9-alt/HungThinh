@@ -106,6 +106,12 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
           const isBlankCorrect = submitted && userLower === expectedLower;
           const isBlankError = submitted && userLower !== expectedLower;
 
+          // Create spaced underscores (_ _ _ _) for placeholder
+          const spacedPlaceholder = Array.from({ length: targetLen }).map(() => '_').join(' ');
+          // Dynamic width calculation based on larger of targetLen or typed input length to prevent text cut-off
+          const activeLen = Math.max(blankVal.length, targetLen);
+          const dynamicWidth = Math.max(activeLen * 18 + 24, 75);
+
           return (
             <span key={seg.id} className="cloze-blank-wrapper">
               <input
@@ -113,13 +119,13 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
                 value={blankVal}
                 onChange={(e) => handleInputChange(seg.id, e.target.value)}
                 disabled={submitted}
-                placeholder={'_'.repeat(targetLen)}
-                maxLength={targetLen + 5}
+                placeholder={spacedPlaceholder}
+                maxLength={targetLen + 20}
                 autoComplete="off"
                 className={`cloze-underline-input ${
                   isBlankCorrect ? 'correct' : isBlankError ? 'incorrect' : ''
                 }`}
-                style={{ width: `${Math.max(targetLen * 14 + 20, 60)}px` }}
+                style={{ width: `${dynamicWidth}px` }}
               />
 
               {seg.hint && (
