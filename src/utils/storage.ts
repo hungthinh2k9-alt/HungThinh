@@ -1,10 +1,4 @@
 import type { Lesson, StudentProgress } from '../types/lesson';
-import {
-  saveAllLessonsToSupabase,
-  saveLessonToSupabase,
-  deleteLessonFromSupabase,
-} from './supabase';
-
 const LESSONS_STORAGE_KEY = 'antigravity_english_lessons';
 const PROGRESS_STORAGE_KEY = 'antigravity_english_progress';
 
@@ -13,18 +7,24 @@ export function getStoredLessons(): Lesson[] {
     const data = localStorage.getItem(LESSONS_STORAGE_KEY);
     if (!data) return [];
     return JSON.parse(data);
-  } catch (err) {
+  } catch {
     return [];
   }
 }
 
-export function saveStoredLessons(lessons: Lesson[]): void {
+export function cacheLessonsLocally(lessons: Lesson[]): void {
   try {
     localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(lessons));
-    saveAllLessonsToSupabase(lessons);
   } catch (err) {
     console.error('Failed to save lessons', err);
   }
+}
+
+export function saveStoredLessons(lessons: Lesson[]): void {
+  cacheLessonsLocally(lessons);
+  void import('./supabase')
+    .then(({ saveAllLessonsToSupabase }) => saveAllLessonsToSupabase(lessons))
+    .catch((err) => console.error('Failed to sync lessons', err));
 }
 
 export function saveSingleStoredLesson(lesson: Lesson): void {
@@ -39,7 +39,9 @@ export function saveSingleStoredLesson(lesson: Lesson): void {
       updated = [...current, lesson];
     }
     localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(updated));
-    saveLessonToSupabase(lesson);
+    void import('./supabase')
+      .then(({ saveLessonToSupabase }) => saveLessonToSupabase(lesson))
+      .catch((err) => console.error('Failed to sync lesson', err));
   } catch (err) {
     console.error('Failed to save single lesson', err);
   }
@@ -50,7 +52,9 @@ export function deleteStoredLesson(lessonId: string): void {
     const current = getStoredLessons();
     const updated = current.filter((l) => l.lesson_id !== lessonId);
     localStorage.setItem(LESSONS_STORAGE_KEY, JSON.stringify(updated));
-    deleteLessonFromSupabase(lessonId);
+    void import('./supabase')
+      .then(({ deleteLessonFromSupabase }) => deleteLessonFromSupabase(lessonId))
+      .catch((err) => console.error('Failed to sync lesson deletion', err));
   } catch (err) {
     console.error('Failed to delete lesson', err);
   }
@@ -61,7 +65,7 @@ export function getStoredProgress(): StudentProgress {
     const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
     if (!data) return { completedLessons: {} };
     return JSON.parse(data);
-  } catch (err) {
+  } catch {
     return { completedLessons: {} };
   }
 }

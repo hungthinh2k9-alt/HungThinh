@@ -30,7 +30,7 @@ export const ErrorSpotterEngine: React.FC<ErrorSpotterEngineProps> = ({
     setCorrectionInput('');
     setSubmitted(false);
     setIsCorrect(false);
-  }, [game.id]);
+  }, [game.id, currentIndex]);
 
   const handleTokenClick = (tokenId: string) => {
     if (submitted) return;

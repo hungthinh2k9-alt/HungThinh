@@ -1,18 +1,30 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import type { Lesson } from './types/lesson';
 import type { Language } from './utils/i18n';
 import { getStoredLanguage, saveStoredLanguage, translations } from './utils/i18n';
-import { getStoredLessons, saveStoredLessons } from './utils/storage';
-import { fetchLessonsFromSupabase } from './utils/supabase';
+import { cacheLessonsLocally, getStoredLessons } from './utils/storage';
 import { LessonList } from './components/Student/LessonList';
-import { GameContainer } from './components/Student/GameContainer';
-import { AdminDashboard } from './components/Admin/AdminDashboard';
-import { AdminLogin } from './components/Admin/AdminLogin';
 import { BookOpen, Settings } from 'lucide-react';
 
+const GameContainer = lazy(() =>
+  import('./components/Student/GameContainer').then((module) => ({
+    default: module.GameContainer,
+  })),
+);
+const AdminDashboard = lazy(() =>
+  import('./components/Admin/AdminDashboard').then((module) => ({
+    default: module.AdminDashboard,
+  })),
+);
+const AdminLogin = lazy(() =>
+  import('./components/Admin/AdminLogin').then((module) => ({
+    default: module.AdminLogin,
+  })),
+);
+
 export function App() {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [lessons, setLessons] = useState<Lesson[]>(() => getStoredLessons());
+  const [loading, setLoading] = useState<boolean>(() => getStoredLessons().length === 0);
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [lang, setLang] = useState<Language>(getStoredLanguage());
@@ -22,16 +34,18 @@ export function App() {
 
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
-      const remoteData = await fetchLessonsFromSupabase();
-      if (remoteData !== null) {
-        setLessons(remoteData);
-        saveStoredLessons(remoteData);
-      } else {
-        const localData = getStoredLessons();
-        setLessons(localData);
+      try {
+        const { fetchLessonsFromSupabase } = await import('./utils/supabase');
+        const remoteData = await fetchLessonsFromSupabase();
+        if (remoteData !== null) {
+          setLessons(remoteData);
+          cacheLessonsLocally(remoteData);
+        }
+      } catch (err) {
+        console.error('Failed to load the Supabase client', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadData();
   }, []);
@@ -43,7 +57,6 @@ export function App() {
 
   const handleLessonsUpdated = (updatedLessons: Lesson[]) => {
     setLessons(updatedLessons);
-    saveStoredLessons(updatedLessons);
   };
 
   const handleBackToDashboard = () => {
@@ -96,7 +109,12 @@ export function App() {
             <p>{lang === 'vi' ? 'Đang mở bài học...' : 'Opening lessons...'}</p>
           </div>
         ) : (
-          <>
+          <Suspense fallback={(
+            <div className="loading-spinner-container">
+              <div className="spinner" />
+              <p>{lang === 'vi' ? 'Đang mở...' : 'Opening...'}</p>
+            </div>
+          )}>
             {activeTab === 'student' && (
               selectedLesson ? (
                 <GameContainer
@@ -128,7 +146,7 @@ export function App() {
                 />
               )
             )}
-          </>
+          </Suspense>
         )}
       </main>
 

@@ -1226,6 +1226,27 @@ input, textarea, select {
   border-color: #fca5a5;
 }
 
+.btn-icon-action.primary {
+  color: var(--accent-primary);
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.btn-icon-action.icon-only { padding-inline: 0.45rem; }
+
+.btn-icon-action:hover:not(:disabled),
+.btn-secondary-small:hover:not(:disabled),
+.btn-icon-small:hover:not(:disabled) {
+  border-color: #a5b4fc;
+  background: #eef2ff;
+  color: var(--accent-primary);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .full-width {
   width: 100%;
 }
@@ -1371,6 +1392,18 @@ input, textarea, select {
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
   gap: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #fafaff 100%);
+}
+
+.admin-header-copy { min-width: 0; }
+
+.admin-eyebrow {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--accent-primary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
 }
 
 .admin-title {
@@ -1389,6 +1422,28 @@ input, textarea, select {
 .admin-header-actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.admin-overview {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.admin-overview span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.55rem;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
 }
 
 .admin-lessons-list {
@@ -1402,7 +1457,8 @@ input, textarea, select {
 
 .table-header-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.8fr;
+  grid-template-columns: minmax(260px, 2.2fr) minmax(150px, 1fr) 90px minmax(310px, 1.8fr);
+  column-gap: 1.25rem;
   padding: 0.85rem 1.25rem;
   background: #f8fafc;
   font-size: 0.78rem;
@@ -1413,12 +1469,16 @@ input, textarea, select {
 
 .table-data-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.8fr;
+  grid-template-columns: minmax(260px, 2.2fr) minmax(150px, 1fr) 90px minmax(310px, 1.8fr);
+  column-gap: 1.25rem;
   padding: 1.1rem 1.25rem;
   border-top: 1px solid var(--border-color);
   align-items: center;
   word-break: break-word;
+  transition: background-color 0.15s ease;
 }
+
+.table-data-row:hover { background: #fcfcff; }
 
 .lesson-row-title {
   font-weight: 700;
@@ -1430,6 +1490,8 @@ input, textarea, select {
   color: var(--text-muted);
   font-size: 0.82rem;
   word-break: break-word;
+  line-height: 1.45;
+  margin-top: 0.15rem;
 }
 
 .lesson-id-tag {
@@ -1442,7 +1504,48 @@ input, textarea, select {
 .lesson-actions-cell {
   display: flex;
   gap: 0.3rem;
-  flex-wrap: wrap;
+  align-items: center;
+}
+
+.lesson-category-cell,
+.lesson-games-count-cell { min-width: 0; }
+
+.category-pill-small,
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.category-pill-small {
+  max-width: 100%;
+  padding: 0.28rem 0.55rem;
+  color: #5b21b6;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count-badge {
+  padding: 0.28rem 0.5rem;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+}
+
+.admin-mobile-label { display: none; }
+
+.lesson-order-actions {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding-left: 0.3rem;
+  margin-left: 0.15rem;
+  border-left: 1px solid var(--border-color);
 }
 
 .metadata-card, .game-editor-card {
@@ -1478,6 +1581,18 @@ input, textarea, select {
   outline: none;
   font-size: 0.9rem;
   max-width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input:focus, .form-textarea:focus, .game-type-select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.readonly-input {
+  color: #64748b;
+  background: #f8fafc;
+  font-family: monospace;
 }
 
 .grid-2-cols {
@@ -1621,14 +1736,107 @@ input, textarea, select {
   .admin-header-banner {
     flex-direction: column;
     align-items: flex-start;
+    padding: 1.25rem;
+  }
+  .admin-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-header-actions .btn-primary {
+    grid-column: 1 / -1;
+  }
+  .admin-overview {
+    flex-wrap: wrap;
   }
   .table-header-row {
     display: none;
   }
   .table-data-row {
     grid-template-columns: 1fr;
+    gap: 0.8rem;
+    padding: 1.1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+  }
+  .admin-lessons-list {
+    display: flex;
+    flex-direction: column;
     gap: 0.75rem;
-    padding: 1rem;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .admin-mobile-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .lesson-category-cell,
+  .lesson-games-count-cell {
+    display: inline-block;
+  }
+  .lesson-actions-cell {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 0.4rem;
+  }
+  .lesson-actions-cell .btn-icon-action {
+    justify-content: center;
+  }
+  .lesson-order-actions {
+    grid-column: 3;
+    padding-left: 0;
+    margin-left: 0;
+    border-left: 0;
+  }
+  .lesson-actions-cell .btn-icon-action.danger {
+    grid-column: 4;
+  }
+  .admin-editor-header {
+    position: static;
+    top: auto;
+  }
+  .editor-title {
+    order: -1;
+    width: 100%;
+  }
+  .editor-header-save { display: none; }
+  .games-toolbar {
+    width: 100%;
+    align-items: flex-start;
+  }
+  .game-editor-header > .flex {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .game-editor-controls {
+    width: 100%;
+  }
+  .game-toggle-button {
+    margin-right: auto;
+  }
+  .game-collapsed-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .item-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .item-row .form-input {
+    min-width: calc(100% - 2.25rem);
+  }
+  .item-row-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
   .grid-2-cols {
     grid-template-columns: 1fr;
@@ -1641,10 +1849,7 @@ input, textarea, select {
     font-size: 0.82rem;
     padding: 0.55rem 0.65rem;
   }
-  .lesson-actions-cell {
-    width: 100%;
-    justify-content: flex-start;
-  }
+  .lesson-actions-cell { width: 100%; }
 }
 
 /* Hint & Text Buttons */
@@ -1739,6 +1944,29 @@ input, textarea, select {
   flex-wrap: wrap;
 }
 
+.game-toggle-button {
+  color: var(--accent-primary);
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.game-collapsed-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.game-collapsed-summary strong {
+  flex-shrink: 0;
+  color: #475569;
+}
+
 .game-number-badge {
   font-weight: 700;
   font-size: 0.85rem;
@@ -1752,6 +1980,25 @@ input, textarea, select {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.section-description {
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.games-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+}
+
+.games-view-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
 }
 
 .items-list-header {
@@ -1772,6 +2019,36 @@ input, textarea, select {
   box-shadow: var(--shadow-sm);
   gap: 0.75rem;
   flex-wrap: wrap;
+  position: sticky;
+  top: 4.6rem;
+  z-index: 30;
+}
+
+.editor-bottom-actions { display: none; }
+
+@media (max-width: 768px) {
+  .admin-editor-header {
+    position: static;
+    top: auto;
+  }
+
+  .editor-header-save { display: none; }
+
+  .editor-bottom-actions {
+    display: block;
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.75rem;
+    z-index: 35;
+    margin: 0;
+    padding: 0.4rem;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+  }
 }
 
 .editor-title {
@@ -1947,4 +2224,3 @@ input, textarea, select {
 .text-indigo-600 { color: #4f46e5; }
 .text-muted { color: var(--text-muted); }
 .fill-current { fill: currentColor; }
-

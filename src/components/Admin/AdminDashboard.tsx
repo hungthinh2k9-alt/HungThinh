@@ -14,6 +14,7 @@ import {
   BookOpen,
   KeyRound,
   LogOut,
+  Layers,
 } from 'lucide-react';
 import { saveSingleStoredLesson, deleteStoredLesson, saveStoredLessons } from '../../utils/storage';
 
@@ -34,6 +35,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const t = translations[lang];
+  const totalGames = lessons.reduce((sum, lesson) => sum + lesson.games.length, 0);
 
   const handleCreateNewLesson = () => {
     const newLesson: Lesson = {
@@ -111,9 +113,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   return (
     <div className="admin-dashboard-container animate-fade-in">
       <div className="admin-header-banner shadow-sm">
-        <div>
+        <div className="admin-header-copy">
+          <span className="admin-eyebrow">{lang === 'vi' ? 'QUẢN TRỊ NỘI DUNG' : 'CONTENT MANAGEMENT'}</span>
           <h1 className="admin-title">{t.adminTitle}</h1>
           <p className="admin-subtitle">{t.adminSubtitle}</p>
+          <div className="admin-overview" aria-label={lang === 'vi' ? 'Tổng quan nội dung' : 'Content overview'}>
+            <span><BookOpen size={15} /> {lessons.length} {lang === 'vi' ? 'chủ đề' : 'topics'}</span>
+            <span><Layers size={15} /> {totalGames} {lang === 'vi' ? 'bài tập' : 'exercises'}</span>
+          </div>
         </div>
 
         <div className="admin-header-actions flex-wrap">
@@ -146,18 +153,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <div className="lesson-category-cell">
+              <span className="admin-mobile-label">{t.category}</span>
               <span className="category-pill-small">
                 {lesson.category || 'General'}
               </span>
             </div>
 
             <div className="lesson-games-count-cell">
-              <span className="count-badge">{lesson.games.length} {t.gamesCount}</span>
+              <span className="admin-mobile-label">{t.gamesCount}</span>
+              <span className="count-badge"><Layers size={14} /> {lesson.games.length}</span>
             </div>
 
             <div className="lesson-actions-cell">
               <button
-                className="btn-icon-action"
+                className="btn-icon-action primary"
                 onClick={() => setEditingLesson(lesson)}
                 title={t.edit}
               >
@@ -170,22 +179,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               >
                 <Copy size={15} /> {t.copy}
               </button>
-              <button
-                className="btn-icon-action"
-                onClick={() => handleMoveLesson(idx, 'up')}
-                disabled={idx === 0}
-                title={t.moveUp}
-              >
-                <ArrowUp size={15} />
-              </button>
-              <button
-                className="btn-icon-action"
-                onClick={() => handleMoveLesson(idx, 'down')}
-                disabled={idx === lessons.length - 1}
-                title={t.moveDown}
-              >
-                <ArrowDown size={15} />
-              </button>
+              <div className="lesson-order-actions" aria-label={lang === 'vi' ? 'Sắp xếp chủ đề' : 'Reorder topic'}>
+                <button
+                  className="btn-icon-action icon-only"
+                  onClick={() => handleMoveLesson(idx, 'up')}
+                  disabled={idx === 0}
+                  title={t.moveUp}
+                  aria-label={t.moveUp}
+                >
+                  <ArrowUp size={15} />
+                </button>
+                <button
+                  className="btn-icon-action icon-only"
+                  onClick={() => handleMoveLesson(idx, 'down')}
+                  disabled={idx === lessons.length - 1}
+                  title={t.moveDown}
+                  aria-label={t.moveDown}
+                >
+                  <ArrowDown size={15} />
+                </button>
+              </div>
               <button
                 className="btn-icon-action danger"
                 onClick={() => handleDeleteLesson(lesson.lesson_id)}

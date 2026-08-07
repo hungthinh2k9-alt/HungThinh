@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseWordScrambleItem } from '../../utils/parsers';
 import { CheckCircle2, XCircle, HelpCircle, RotateCcw } from 'lucide-react';
@@ -29,7 +29,10 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
   const [isCorrect, setIsCorrect] = useState(false);
 
   const currentRawItem = game.items[currentIndex];
-  const parsed = parseWordScrambleItem(currentRawItem, `ws-${currentIndex}`);
+  const parsed = useMemo(
+    () => parseWordScrambleItem(currentRawItem, `ws-${currentIndex}`),
+    [currentIndex, currentRawItem],
+  );
 
   useEffect(() => {
     const tiles: LetterTile[] = parsed.scrambledLetters.map((char, idx) => ({
@@ -41,7 +44,7 @@ export const WordScrambleEngine: React.FC<WordScrambleEngineProps> = ({
     setShowHint(false);
     setSubmitted(false);
     setIsCorrect(false);
-  }, [game.id]);
+  }, [parsed]);
 
   const handleCheck = useCallback(() => {
     if (submitted || bankTiles.length > 0) return;

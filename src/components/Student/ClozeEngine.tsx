@@ -30,7 +30,7 @@ export const ClozeEngine: React.FC<ClozeEngineProps> = ({
     setSubmitted(false);
     setIsCorrect(false);
     setShowHint({});
-  }, [game.id]);
+  }, [game.id, currentIndex]);
 
   const handleInputChange = (blankId: string, val: string) => {
     if (submitted) return;

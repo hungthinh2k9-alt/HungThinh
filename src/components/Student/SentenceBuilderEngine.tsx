@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Game } from '../../types/lesson';
 import { parseSentenceBuilderItem } from '../../utils/parsers';
 import { CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
@@ -23,7 +23,10 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
   const [isCorrect, setIsCorrect] = useState(false);
 
   const currentRawItem = game.items[currentIndex];
-  const parsed = parseSentenceBuilderItem(currentRawItem, `sb-${currentIndex}`);
+  const parsed = useMemo(
+    () => parseSentenceBuilderItem(currentRawItem, `sb-${currentIndex}`),
+    [currentIndex, currentRawItem],
+  );
 
   useEffect(() => {
     const blocksWithId = parsed.shuffledBlocks.map((b, idx) => ({
@@ -34,7 +37,7 @@ export const SentenceBuilderEngine: React.FC<SentenceBuilderEngineProps> = ({
     setConstructedBlocks([]);
     setSubmitted(false);
     setIsCorrect(false);
-  }, [game.id]);
+  }, [parsed]);
 
   const handleBankBlockClick = (block: { id: string; text: string }) => {
     if (submitted) return;

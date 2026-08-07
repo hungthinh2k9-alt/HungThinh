@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Game, MatchingPair } from '../../types/lesson';
 import { parseMatchingItems, shuffleArray } from '../../utils/parsers';
 import { CheckCircle2 } from 'lucide-react';
@@ -54,9 +54,9 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     setAttempts(0);
     setIsFinished(false);
     setLines([]);
-  }, [game.id]);
+  }, [game.id, game.items]);
 
-  const updateLines = () => {
+  const updateLines = useCallback(() => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const newLines: ConnectionLine[] = [];
@@ -106,13 +106,13 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     }
 
     setLines(newLines);
-  };
+  }, [matchedIds, mismatchedLeft, mismatchedRight]);
 
   useEffect(() => {
     updateLines();
     window.addEventListener('resize', updateLines);
     return () => window.removeEventListener('resize', updateLines);
-  }, [matchedIds, mismatchedLeft, mismatchedRight, selectedLeft, selectedRight]);
+  }, [updateLines]);
 
   const handleLeftClick = (pairId: string) => {
     if (matchedIds.includes(pairId) || mismatch || isFinished) return;

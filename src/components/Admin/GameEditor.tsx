@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Game, GameType } from '../../types/lesson';
-import { Plus, Trash2, ArrowUp, ArrowDown, Eye, HelpCircle, X } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, Eye, HelpCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { ClozeEngine } from '../Student/ClozeEngine';
 import { MatchingEngine } from '../Student/MatchingEngine';
 import { SentenceBuilderEngine } from '../Student/SentenceBuilderEngine';
@@ -15,6 +15,8 @@ interface GameEditorProps {
   onMoveDown?: () => void;
   gameIndex: number;
   totalGames: number;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 const GAME_SYNTAX_GUIDES: Record<GameType, { label: string; placeholder: string; example: string }> = {
@@ -53,6 +55,8 @@ export const GameEditor: React.FC<GameEditorProps> = ({
   onMoveDown,
   gameIndex,
   totalGames,
+  isExpanded,
+  onToggle,
 }) => {
   const [showPreview, setShowPreview] = useState(false);
 
@@ -128,6 +132,15 @@ export const GameEditor: React.FC<GameEditorProps> = ({
         <div className="game-editor-controls">
           <button
             type="button"
+            className="btn-icon-small game-toggle-button"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            {isExpanded ? 'Thu gọn' : 'Chỉnh sửa'}
+          </button>
+          <button
+            type="button"
             className="btn-icon-small"
             onClick={() => setShowPreview(true)}
             title="Xem trước bài tập"
@@ -167,6 +180,14 @@ export const GameEditor: React.FC<GameEditorProps> = ({
         </div>
       </div>
 
+      {!isExpanded && (
+        <div className="game-collapsed-summary">
+          <span>{game.instruction || 'Chưa có yêu cầu bài tập'}</span>
+          <strong>{game.items.length} câu hỏi</strong>
+        </div>
+      )}
+
+      {isExpanded && <div className="game-editor-body">
       <div className="form-group mt-3">
         <label className="form-label">Yêu cầu bài tập:</label>
         <input
@@ -232,6 +253,7 @@ export const GameEditor: React.FC<GameEditorProps> = ({
           </div>
         ))}
       </div>
+      </div>}
 
       {/* Live Preview Modal */}
       {showPreview && (

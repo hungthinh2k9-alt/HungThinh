@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Lesson, Game, GameType } from '../../types/lesson';
 import { GameEditor } from './GameEditor';
-import { Save, ArrowLeft, Plus, AlertCircle } from 'lucide-react';
+import { Save, ArrowLeft, Plus, AlertCircle, ChevronsUp, ChevronsDown } from 'lucide-react';
 
 interface LessonEditorProps {
   lesson: Lesson;
@@ -18,6 +18,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 }) => {
   const [lesson, setLesson] = useState<Lesson>(initialLesson);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [expandedGameIds, setExpandedGameIds] = useState<Set<string>>(
+    () => new Set(initialLesson.games[0] ? [initialLesson.games[0].id] : []),
+  );
 
   const handleFieldChange = (field: keyof Lesson, value: string) => {
     setLesson((prev) => ({ ...prev, [field]: value }));
@@ -40,13 +43,31 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       ...prev,
       games: [...prev.games, newGame],
     }));
+    setExpandedGameIds((prev) => new Set(prev).add(newGame.id));
   };
 
   const handleDeleteGame = (index: number) => {
+    const deletedGameId = lesson.games[index]?.id;
     setLesson((prev) => ({
       ...prev,
       games: prev.games.filter((_, idx) => idx !== index),
     }));
+    if (deletedGameId) {
+      setExpandedGameIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deletedGameId);
+        return next;
+      });
+    }
+  };
+
+  const toggleGame = (gameId: string) => {
+    setExpandedGameIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(gameId)) next.delete(gameId);
+      else next.add(gameId);
+      return next;
+    });
   };
 
   const handleMoveGame = (index: number, direction: 'up' | 'down') => {
@@ -88,7 +109,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         <h2 className="editor-title">
           {isNew ? 'Tạo bài học' : 'Sửa bài học'}
         </h2>
-        <button className="btn-primary" onClick={handleSaveClick}>
+        <button className="btn-primary editor-header-save" onClick={handleSaveClick}>
           <Save size={18} /> Lưu bài học
         </button>
       </div>
@@ -104,6 +125,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       <div className="metadata-card shadow-sm mt-4">
         <h3 className="card-section-title">Thông tin bài học</h3>
         <div className="grid-2-cols mt-3">
+          <div className="form-group">
+            <label className="form-label">Mã bài học</label>
+            <input type="text" value={lesson.lesson_id} className="form-input readonly-input" readOnly />
+          </div>
           <div className="form-group">
             <label className="form-label">Nhóm bài học</label>
             <input
@@ -142,8 +167,20 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       {/* Games List Builder */}
       <div className="games-builder-section mt-6">
         <div className="section-header">
-          <h3>Danh sách bài tập ({lesson.games.length})</h3>
-          <div className="flex gap-2 flex-wrap">
+          <div>
+            <h3>Danh sách bài tập ({lesson.games.length})</h3>
+            <p className="section-description">Mở từng bài tập để chỉnh sửa nội dung và câu hỏi.</p>
+          </div>
+          <div className="games-toolbar">
+            <div className="games-view-controls">
+              <button type="button" className="btn-text-small" onClick={() => setExpandedGameIds(new Set(lesson.games.map((game) => game.id)))}>
+                <ChevronsDown size={14} /> Mở tất cả
+              </button>
+              <button type="button" className="btn-text-small" onClick={() => setExpandedGameIds(new Set())}>
+                <ChevronsUp size={14} /> Thu gọn
+              </button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               className="btn-secondary-small"
@@ -179,6 +216,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             >
               <Plus size={14} /> Xếp chữ
             </button>
+            </div>
           </div>
         </div>
 
@@ -193,9 +231,17 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
               onMoveDown={() => handleMoveGame(idx, 'down')}
               gameIndex={idx}
               totalGames={lesson.games.length}
+              isExpanded={expandedGameIds.has(g.id)}
+              onToggle={() => toggleGame(g.id)}
             />
           ))}
         </div>
+      </div>
+
+      <div className="editor-bottom-actions">
+        <button className="btn-primary full-width" onClick={handleSaveClick}>
+          <Save size={18} /> Lưu bài học
+        </button>
       </div>
     </div>
   );
